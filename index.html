@@ -298,7 +298,7 @@
       <section class="panel map-panel">
         <div class="map-toolbar">
           <strong>🗺️ 부산대 탐험지도</strong>
-          <span style="display:flex;gap:8px;flex-wrap:wrap"><label class="switch"><input type="checkbox" id="windToggle" checked> 💨 바람</label><label class="switch"><input type="checkbox" id="weatherToggle" checked> 🌦️ 날씨</label><label class="switch"><input type="checkbox" id="soundToggle" checked> 🔊 소리</label></span>
+          <span style="display:flex;gap:8px;flex-wrap:wrap"><label class="switch"><input type="checkbox" id="windToggle" checked> 💨 바람</label><label class="switch"><input type="checkbox" id="weatherToggle" checked> 🌦️ 날씨</label></span>
         </div>
         <div class="map-stage" id="childMap">
           <div id="leafletMap" aria-label="부산대학교 지도"></div>
@@ -522,22 +522,6 @@
     if(r.windStrength) tiles.push(`<div class="kid-tile"><span class="k-icon"><span style="display:inline-block;transform:rotate(${dirDeg[r.windDirection]||0}deg)">➤</span></span><span class="k-label">바람 ${KID_WIND[ws]}</span><span class="k-sub">${"💨".repeat(ws)}</span></div>`);
     return tiles.length?`<div class="kid-weather">${tiles.join("")}</div>`:"";
   }
-  function kidSentence(r){
-    if(!r) return "";
-    const parts=[], f=feelOf(r);
-    if(KID_WEATHER[r.weather]) parts.push(KID_WEATHER[r.weather]+".");
-    if(hasTemp(r)) parts.push(`${Number(r.temperature)}도, ${f?f[1]:""}.`);
-    if(r.windStrength) parts.push(`바람이 ${KID_WIND[Math.max(1,Math.min(3,Number(r.windStrength)||1))]} 불어요.`);
-    return parts.join(" ");
-  }
-  function speak(text){
-    try{
-      if(!$("#soundToggle").checked || !("speechSynthesis" in window) || !text) return;
-      speechSynthesis.cancel();
-      const u=new SpeechSynthesisUtterance(text); u.lang="ko-KR"; u.rate=.9; u.pitch=1.1;
-      speechSynthesis.speak(u);
-    }catch(e){}
-  }
   function burst(x,y){
     const icons=["⭐","🌟","✨","💛"];
     for(let i=0;i<8;i++){
@@ -651,7 +635,7 @@
       voteLock=true; setTimeout(()=>voteLock=false,700);
       const rect=btn.getBoundingClientRect(); burst(rect.right-40, rect.top+rect.height/2);
       p.votes=(Number(p.votes)||0)+1; selectedPlaceId=p.id; save();
-      toast(`${p.name}에 한 표! 🌟`); speak(`${p.name}에 한 표!`);
+      toast(`${p.name}에 한 표! 🌟`);
     });
   }
   const divIcon = html => L.divIcon({className:"lf-icon",html,iconSize:[0,0],iconAnchor:[0,0]});
@@ -679,7 +663,6 @@
   }
   function selectPlace(id){
     selectedPlaceId=id; renderMap(); renderSelected();
-    const p=placeById(id); if(p) speak(`${p.name}. ${kidSentence(latestFor(p.id))}`);
   }
   function renderMap(){
     if(!map) return;
@@ -899,7 +882,6 @@
     else{ baseLayers.sat.remove(); baseLayers.map.addTo(map); }
     $("#mapModeBtn").textContent=satellite?"🗺️ 지도로 보기":"🛰️ 하늘에서 보기";
   };
-  $("#soundToggle").onchange=()=>{ if(!$("#soundToggle").checked) try{ speechSynthesis.cancel(); }catch(e){} };
   $("#recordFilter").onchange=renderRecords;
   $("#previewChildBtn").onclick=()=>go("child");
 
