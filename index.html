@@ -172,8 +172,45 @@
   .close{border:0;background:#efede4;border-radius:12px;padding:8px 10px}
   .tiny{font-size:10px;color:var(--muted);line-height:1.5}
   .footer-note{margin-top:22px;padding:14px 16px;background:#efecdf;border-radius:16px;color:#66736b;font-size:11px;line-height:1.6}
+  /* ---- 유아 친화 화면 ---- */
+  body.child-mode .hero{display:none}
+  .child-grid{grid-template-columns:320px minmax(560px,1fr) 360px}
+  #view-child .panel-head h3{font-size:21px}
+  #view-child .panel-head p{font-size:14px}
+  .vote-card{width:100%;border:0;text-align:left;color:var(--ink);grid-template-columns:64px 1fr 56px;gap:12px;padding:12px 12px 12px 10px;transition:transform .12s}
+  .vote-card:active{transform:scale(.96)}
+  .vote-card:hover{background:#efebdd}
+  .vote-emoji{width:64px;height:64px;border-radius:18px;font-size:34px}
+  .vote-name{font-size:18px}
+  .vote-stars{font-size:13px;margin-top:4px;line-height:1.3;color:#8a7a3a;font-weight:800}
+  .vote-count{font-size:12px}
+  .vote-btn{width:56px;height:56px;padding:0;display:grid;place-items:center;font-size:28px;box-shadow:0 5px 0 #e6b93d}
+  .pin-bubble{width:58px;height:58px}
+  .pin-bubble span{font-size:27px}
+  .pin-label{font-size:13px;padding:7px 11px}
+  .map-pin.selected .pin-bubble{animation:bob 1.2s ease-in-out infinite}
+  @keyframes bob{50%{translate:0 -7px}}
+  .map-toolbar strong{font-size:16px}
+  .map-toolbar .switch{background:#f3f0e6;padding:8px 13px;border-radius:999px;font-size:14px;font-weight:900;color:var(--ink);cursor:pointer}
+  .map-toolbar .switch input{width:18px;height:18px}
+  .legend{font-size:12px;line-height:1.6}
+  .place-title-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px}
+  .place-title-row .place-title{margin:0;font-size:26px}
+  .listen-btn{border:0;background:var(--yellow);color:#5c4b15;border-radius:999px;padding:10px 15px;font-size:16px;font-weight:900;box-shadow:0 4px 0 #e6b93d;white-space:nowrap}
+  .listen-btn:active{transform:translateY(3px);box-shadow:0 1px 0 #e6b93d}
+  .kid-weather{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-top:12px}
+  .kid-tile{background:var(--sky);border-radius:18px;padding:12px 6px;text-align:center}
+  .kid-tile:nth-child(2){background:#fde9dc}
+  .kid-tile:nth-child(3){background:#e8f3df}
+  .kid-tile .k-icon{font-size:38px;line-height:1.1;display:block}
+  .kid-tile .k-label{display:block;font-size:15px;font-weight:900;margin-top:5px}
+  .kid-tile .k-sub{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+  #view-child .quote{font-size:17px}
+  .burst{position:fixed;z-index:120;font-size:28px;pointer-events:none;transform:translate(-50%,-50%);animation:burst .9s ease-out forwards}
+  @keyframes burst{to{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1.3);opacity:0}}
+  @media (prefers-reduced-motion:reduce){.map-pin.selected .pin-bubble,.burst{animation:none}.burst{display:none}}
   @media(max-width:1180px){
-    .child-grid{grid-template-columns:260px 1fr}.detail-panel{grid-column:1/-1}
+    .child-grid{grid-template-columns:300px 1fr}.detail-panel{grid-column:1/-1}
     .teacher-layout{grid-template-columns:1fr}
   }
   @media(max-width:820px){
@@ -183,6 +220,7 @@
     .hero{grid-template-columns:1fr}.hero h2{font-size:28px}
     .child-grid{grid-template-columns:1fr}
     .map-stage{min-height:400px}
+    .map-toolbar{flex-wrap:wrap}
     .records-grid{grid-template-columns:1fr 1fr}
     .form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}
   }
@@ -194,7 +232,7 @@
   }
 </style>
 </head>
-<body>
+<body class="child-mode">
 <div class="app">
 <header>
   <div class="brand">
@@ -233,7 +271,7 @@
     <div class="child-grid">
       <aside class="panel">
         <div class="panel-head">
-          <div><h3>오늘 어디 갈까? 🗳️</h3><p>친구들과 가고 싶은 곳에 투표해요.</p></div>
+          <div><h3>오늘 어디 갈까? 🗳️</h3><p>가고 싶은 곳을 꾹 눌러요 👆</p></div>
         </div>
         <div class="vote-list" id="voteList"></div>
       </aside>
@@ -241,7 +279,7 @@
       <section class="panel map-panel">
         <div class="map-toolbar">
           <strong>🗺️ 우리가 만드는 부산대 탐험지도</strong>
-          <span style="display:flex;gap:12px;flex-wrap:wrap"><label class="switch"><input type="checkbox" id="windToggle" checked> 바람 표시</label><label class="switch"><input type="checkbox" id="weatherToggle" checked> 날씨 표시</label></span>
+          <span style="display:flex;gap:8px;flex-wrap:wrap"><label class="switch"><input type="checkbox" id="windToggle" checked> 💨 바람</label><label class="switch"><input type="checkbox" id="weatherToggle" checked> 🌦️ 날씨</label><label class="switch"><input type="checkbox" id="soundToggle" checked> 🔊 소리</label></span>
         </div>
         <div class="map-stage" id="childMap">
           <svg class="map-art" viewBox="0 0 1000 620" preserveAspectRatio="none" aria-hidden="true">
@@ -284,7 +322,7 @@
 
       <aside class="panel detail-panel">
         <div class="panel-head">
-          <div><h3>오늘의 발견 🔎</h3><p>지도 핀을 누르면 기록이 보여요.</p></div>
+          <div><h3>오늘의 발견 🔎</h3><p>지도의 그림을 눌러 보세요 👆</p></div>
         </div>
         <div class="selected-place" id="selectedPlace"></div>
       </aside>
@@ -480,6 +518,49 @@
     if(FEELING[r.feeling]) out.push(`<span class="chip">${FEELING[r.feeling]}</span>`);
     return out.join("");
   }
+  const KID_WEATHER = {sunny:"해가 쨍쨍",partly:"구름이 조금",cloudy:"구름이 많아요",rain:"비가 와요",snow:"눈이 와요"};
+  const KID_FEEL = {cold:["🥶","추워요"],cool:["😊","시원해요"],warm:["🙂","따뜻해요"],hot:["🥵","더워요"]};
+  const KID_WIND = {1:"살랑살랑",2:"솔솔",3:"쌩쌩"};
+  function feelOf(r){
+    if(KID_FEEL[r.feeling]) return KID_FEEL[r.feeling];
+    if(!hasTemp(r)) return null;
+    const t=Number(r.temperature);
+    return t<=5?KID_FEEL.cold:t<=17?KID_FEEL.cool:t<=25?KID_FEEL.warm:KID_FEEL.hot;
+  }
+  function kidWeather(r){
+    const tiles=[], w=WEATHER[r.weather], f=feelOf(r);
+    const ws=Math.max(1,Math.min(3,Number(r.windStrength)||1));
+    if(w) tiles.push(`<div class="kid-tile"><span class="k-icon">${w.icon}</span><span class="k-label">${KID_WEATHER[r.weather]}</span></div>`);
+    if(hasTemp(r)) tiles.push(`<div class="kid-tile"><span class="k-icon">${f?f[0]:"🌡️"}</span><span class="k-label">${Number(r.temperature)}도</span><span class="k-sub">${f?f[1]:""}</span></div>`);
+    if(r.windStrength) tiles.push(`<div class="kid-tile"><span class="k-icon"><span style="display:inline-block;transform:rotate(${dirDeg[r.windDirection]||0}deg)">➤</span></span><span class="k-label">바람 ${KID_WIND[ws]}</span><span class="k-sub">${"💨".repeat(ws)}</span></div>`);
+    return tiles.length?`<div class="kid-weather">${tiles.join("")}</div>`:"";
+  }
+  function kidSentence(r){
+    if(!r) return "";
+    const parts=[], f=feelOf(r);
+    if(KID_WEATHER[r.weather]) parts.push(KID_WEATHER[r.weather]+".");
+    if(hasTemp(r)) parts.push(`${Number(r.temperature)}도, ${f?f[1]:""}.`);
+    if(r.windStrength) parts.push(`바람이 ${KID_WIND[Math.max(1,Math.min(3,Number(r.windStrength)||1))]} 불어요.`);
+    return parts.join(" ");
+  }
+  function speak(text){
+    try{
+      if(!$("#soundToggle").checked || !("speechSynthesis" in window) || !text) return;
+      speechSynthesis.cancel();
+      const u=new SpeechSynthesisUtterance(text); u.lang="ko-KR"; u.rate=.9; u.pitch=1.1;
+      speechSynthesis.speak(u);
+    }catch(e){}
+  }
+  function burst(x,y){
+    const icons=["⭐","🌟","✨","💛"];
+    for(let i=0;i<8;i++){
+      const el=document.createElement("span"), a=Math.PI*2*i/8;
+      el.className="burst"; el.textContent=icons[i%icons.length];
+      el.style.left=x+"px"; el.style.top=y+"px";
+      el.style.setProperty("--dx",Math.cos(a)*75+"px"); el.style.setProperty("--dy",(Math.sin(a)*75-30)+"px");
+      document.body.appendChild(el); setTimeout(()=>el.remove(),950);
+    }
+  }
   function weatherShort(r){
     const parts=[];
     if(WEATHER[r?.weather]) parts.push(WEATHER[r.weather].icon);
@@ -506,6 +587,7 @@
   let teacherUnlocked = false;
   let pendingPhoto = "";
   let newX = 50, newY = 50;
+  let voteLock = false;
 
   function cloneDemo(){ return JSON.parse(JSON.stringify(demo)); }
   function load(){
@@ -539,15 +621,22 @@
   }
   function renderVotes(){
     const sorted=[...state.places].sort((a,b)=>(b.votes||0)-(a.votes||0));
-    $("#voteList").innerHTML=sorted.map(p=>`
-      <div class="vote-card">
+    $("#voteList").innerHTML=sorted.map(p=>{
+      const v=Number(p.votes)||0;
+      return `<button class="vote-card" data-vote="${esc(p.id)}" aria-label="${esc(p.name)}에 투표하기">
         <div class="vote-emoji">${esc(p.emoji||"📍")}</div>
-        <div><div class="vote-name">${esc(p.name)}</div><div class="vote-count">${p.votes||0}표 · 기록 ${recordsFor(p.id).length}개</div></div>
-        <button class="vote-btn" data-vote="${esc(p.id)}">투표</button>
-      </div>`).join("");
+        <div><div class="vote-name">${esc(p.name)}</div>
+          <div class="vote-stars">${v?"⭐".repeat(Math.min(v,8))+(v>8?` +${v-8}`:""):"아직 없어요"}</div>
+          <div class="vote-count">${v}표</div></div>
+        <span class="vote-btn" aria-hidden="true">👍</span>
+      </button>`;}).join("");
     $$("[data-vote]").forEach(btn=>btn.onclick=()=>{
+      if(voteLock) return;
       const p=placeById(btn.dataset.vote); if(!p) return;
-      p.votes=(Number(p.votes)||0)+1; save(); toast(`${p.name}에 한 표! 🌟`);
+      voteLock=true; setTimeout(()=>voteLock=false,700);
+      const rect=btn.getBoundingClientRect(); burst(rect.right-40, rect.top+rect.height/2);
+      p.votes=(Number(p.votes)||0)+1; selectedPlaceId=p.id; save();
+      toast(`${p.name}에 한 표! 🌟`); speak(`${p.name}에 한 표!`);
     });
   }
   function renderMap(){
@@ -556,7 +645,7 @@
         <div class="pin-bubble"><span>${esc(p.emoji||"📍")}</span></div>
         <div class="pin-label">${esc(p.name)}</div>
       </button>`).join("");
-    $$("[data-place]",$("#mapPins")).forEach(btn=>btn.onclick=()=>{ selectedPlaceId=btn.dataset.place; renderMap(); renderSelected(); });
+    $$("[data-place]",$("#mapPins")).forEach(btn=>btn.onclick=()=>{ selectedPlaceId=btn.dataset.place; renderMap(); renderSelected(); const p=placeById(selectedPlaceId); if(p) speak(`${p.name}. ${kidSentence(latestFor(p.id))}`); });
 
     const winds=[];
     state.places.forEach(p=>{
@@ -589,13 +678,16 @@
     const photo=r?.photo;
     $("#selectedPlace").innerHTML=`
       <div class="place-cover">${photo?`<img src="${photo}" alt="${esc(p.name)} 기록 사진">`:`<div class="cover-emoji">${esc(p.emoji||"📍")}</div>`}</div>
+      <div class="place-title-row">
+        <div class="place-title">${esc(p.name)}</div>
+        <button class="listen-btn" id="listenBtn" aria-label="소리로 듣기">🔊 들어요</button>
+      </div>
+      ${r?kidWeather(r):""}
       <div class="place-meta">
         <span class="chip">${esc(r?.mark||p.emoji||"📍")} 아이 마크</span>
-        <span class="chip">🗳️ ${p.votes||0}표</span>
+        <span class="chip">⭐ ${p.votes||0}표</span>
         <span class="chip">📚 ${recordsFor(p.id).length}개 기록</span>
-        ${weatherChips(r)}
       </div>
-      <div class="place-title">${esc(p.name)}</div>
       <div class="place-desc">${esc(p.description||"아이들과 함께 발견을 쌓아가는 장소예요.")}</div>
       ${r?`
         <div class="quote">“${esc(r.quote||"오늘의 아이 의견을 기록해보세요.")}”<small>${esc(r.date)}</small></div>
@@ -604,6 +696,7 @@
       `:`<div class="quote">아직 기록이 없어요. 교사 모드에서 첫 기록을 남겨보세요!</div>`}
     `;
     const btn=$("[data-open-record]",$("#selectedPlace")); if(btn) btn.onclick=()=>openRecord(btn.dataset.openRecord);
+    $("#listenBtn").onclick=()=>speak([p.name, kidSentence(r), r?.quote?`친구가 말했어요. ${r.quote}`:""].filter(Boolean).join(". "));
   }
 
   function renderPlaceSelects(){
@@ -678,6 +771,7 @@
     $$(".tab").forEach(t=>t.classList.remove("active"));
     $(`#view-${view}`).classList.add("active");
     $(`.tab[data-view="${view}"]`)?.classList.add("active");
+    document.body.classList.toggle("child-mode", view==="child");
     if(view==="teacher" && teacherUnlocked) $("#teacherPin").value="";
     if(view==="records") renderRecords();
     window.scrollTo({top:0,behavior:"smooth"});
@@ -687,6 +781,7 @@
   $$("[data-go]").forEach(b=>b.onclick=()=>go(b.dataset.go));
   $("#windToggle").onchange=renderMap;
   $("#weatherToggle").onchange=renderMap;
+  $("#soundToggle").onchange=()=>{ if(!$("#soundToggle").checked) try{ speechSynthesis.cancel(); }catch(e){} };
   $("#recordFilter").onchange=renderRecords;
   $("#previewChildBtn").onclick=()=>go("child");
 
