@@ -204,8 +204,6 @@
   .legend{font-size:12px;line-height:1.6}
   .place-title-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px}
   .place-title-row .place-title{margin:0;font-size:26px}
-  .listen-btn{border:0;background:var(--yellow);color:#5c4b15;border-radius:999px;padding:10px 15px;font-size:16px;font-weight:900;box-shadow:0 4px 0 #e6b93d;white-space:nowrap}
-  .listen-btn:active{transform:translateY(3px);box-shadow:0 1px 0 #e6b93d}
   .kid-weather{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-top:12px}
   .kid-tile{background:var(--sky);border-radius:18px;padding:12px 6px;text-align:center}
   .kid-tile:nth-child(2){background:#fde9dc}
@@ -790,7 +788,6 @@
       <div class="place-cover">${photo?`<img src="${photo}" alt="${esc(p.name)} 기록 사진">`:`<div class="cover-emoji">${esc(p.emoji||"📍")}</div>`}</div>
       <div class="place-title-row">
         <div class="place-title">${esc(p.name)}</div>
-        <button class="listen-btn" id="listenBtn" aria-label="소리로 듣기">🔊 읽어줘요</button>
       </div>
       ${r?kidWeather(r):""}
       <div class="place-meta">
@@ -806,7 +803,6 @@
       `:`<div class="quote">아직 기록이 없어요. 교사 모드에서 첫 기록을 남겨보세요!</div>`}
     `;
     const btn=$("[data-open-record]",$("#selectedPlace")); if(btn) btn.onclick=()=>openRecord(btn.dataset.openRecord);
-    $("#listenBtn").onclick=()=>speak([p.name, kidSentence(r), r?.quote?`친구가 말했어요. ${r.quote}`:""].filter(Boolean).join(". "));
   }
 
   function renderPlaceSelects(){
