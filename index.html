@@ -1,0 +1,753 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f6f3e8">
+<title>바람따라 부산대 | 유아 산책 기록 지도</title>
+<style>
+  :root{
+    --paper:#f7f4e9;
+    --card:#fffdf7;
+    --ink:#25342d;
+    --muted:#6e7d74;
+    --green:#2f7d57;
+    --green2:#7fba78;
+    --lime:#dcebb4;
+    --yellow:#ffd96b;
+    --blue:#87c9df;
+    --sky:#dff2f7;
+    --peach:#f6b692;
+    --purple:#b9a0d8;
+    --line:#dedbcf;
+    --shadow:0 14px 38px rgba(54,73,60,.12);
+    --radius:24px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:ui-rounded,"Pretendard","Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif;background:var(--paper);color:var(--ink)}
+  button,input,select,textarea{font:inherit}
+  button{cursor:pointer}
+  .app{min-height:100vh}
+  header{
+    position:sticky;top:0;z-index:50;
+    display:flex;align-items:center;gap:18px;justify-content:space-between;
+    padding:14px 22px;background:rgba(247,244,233,.94);backdrop-filter:blur(14px);
+    border-bottom:1px solid rgba(37,52,45,.08)
+  }
+  .brand{display:flex;align-items:center;gap:12px;min-width:0}
+  .brand-badge{width:46px;height:46px;border-radius:16px;display:grid;place-items:center;background:var(--green);color:#fff;font-size:25px;box-shadow:0 6px 18px rgba(47,125,87,.25)}
+  .brand h1{font-size:20px;margin:0;line-height:1.1}
+  .brand small{display:block;color:var(--muted);margin-top:4px;font-size:12px}
+  .tabs{display:flex;gap:8px;background:#ede9da;padding:5px;border-radius:16px}
+  .tab{border:0;background:transparent;padding:9px 14px;border-radius:12px;color:#607066;font-weight:800}
+  .tab.active{background:#fff;box-shadow:0 4px 14px rgba(50,60,55,.08);color:var(--green)}
+  .top-actions{display:flex;gap:8px;align-items:center}
+  .ghost,.primary,.danger,.soft{
+    border:0;border-radius:14px;padding:10px 14px;font-weight:800
+  }
+  .ghost{background:#fff;border:1px solid var(--line);color:var(--ink)}
+  .primary{background:var(--green);color:#fff;box-shadow:0 8px 18px rgba(47,125,87,.2)}
+  .soft{background:#eaf3df;color:#315b42}
+  .danger{background:#fff0ec;color:#a74935}
+  .hero{
+    max-width:1480px;margin:22px auto 0;padding:0 22px;
+    display:grid;grid-template-columns:1.25fr .75fr;gap:18px
+  }
+  .hero-card{
+    border-radius:30px;padding:28px;background:linear-gradient(135deg,#fff8d9,#edf7d7 58%,#e2f4f4);
+    box-shadow:var(--shadow);position:relative;overflow:hidden;min-height:170px
+  }
+  .hero-card:after{content:"";position:absolute;width:210px;height:210px;border-radius:50%;background:rgba(255,255,255,.45);right:-60px;top:-70px}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;background:#fff;border-radius:999px;padding:7px 11px;font-size:12px;font-weight:900;color:var(--green)}
+  .hero h2{font-size:34px;line-height:1.18;margin:14px 0 9px;max-width:700px}
+  .hero p{margin:0;color:#53655b;line-height:1.7;max-width:780px}
+  .hero-side{background:var(--card);border-radius:30px;padding:22px;box-shadow:var(--shadow);display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .metric{border-radius:20px;padding:18px;background:#f4f1e6}
+  .metric:nth-child(2){background:#edf6e5}
+  .metric:nth-child(3){background:#e7f4f7}
+  .metric:nth-child(4){background:#fff1dd}
+  .metric strong{display:block;font-size:26px;margin-top:5px}
+  .metric span{font-size:12px;color:var(--muted);font-weight:800}
+  main{max-width:1480px;margin:18px auto 60px;padding:0 22px}
+  .view{display:none}
+  .view.active{display:block}
+  .child-grid{display:grid;grid-template-columns:300px minmax(560px,1fr) 340px;gap:16px;align-items:start}
+  .panel{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid rgba(37,52,45,.05);overflow:hidden}
+  .panel-head{padding:18px 18px 12px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .panel-head h3{margin:0;font-size:17px}
+  .panel-head p{margin:5px 0 0;font-size:12px;color:var(--muted)}
+  .vote-list{padding:4px 12px 14px;display:grid;gap:10px}
+  .vote-card{background:#f5f2e8;border-radius:18px;padding:12px;display:grid;grid-template-columns:46px 1fr auto;gap:10px;align-items:center}
+  .vote-emoji{width:46px;height:46px;border-radius:14px;background:#fff;display:grid;place-items:center;font-size:23px}
+  .vote-name{font-weight:900;font-size:14px}
+  .vote-count{font-size:12px;color:var(--muted);margin-top:3px}
+  .vote-btn{border:0;background:var(--yellow);border-radius:999px;padding:9px 11px;font-size:12px;font-weight:900;color:#5c4b15}
+  .map-panel{padding:0}
+  .map-toolbar{padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid #eee8da}
+  .map-toolbar strong{font-size:14px}
+  .switch{display:flex;gap:7px;align-items:center;font-size:12px;color:var(--muted)}
+  .switch input{accent-color:var(--green)}
+  .map-stage{
+    position:relative;aspect-ratio:16/10;min-height:500px;overflow:hidden;
+    background:#dfeec8;
+  }
+  .map-art{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .map-pin{
+    position:absolute;transform:translate(-50%,-100%);z-index:8;
+    border:0;background:transparent;padding:0;text-align:center;color:var(--ink)
+  }
+  .pin-bubble{
+    width:46px;height:46px;border-radius:50% 50% 50% 12px;transform:rotate(-45deg);
+    background:#fff;border:4px solid var(--green);display:grid;place-items:center;
+    box-shadow:0 8px 16px rgba(37,52,45,.22)
+  }
+  .pin-bubble span{transform:rotate(45deg);font-size:20px}
+  .pin-label{display:inline-block;margin-top:9px;background:rgba(255,255,255,.94);border-radius:999px;padding:6px 9px;font-size:11px;font-weight:900;box-shadow:0 4px 10px rgba(37,52,45,.14);white-space:nowrap}
+  .map-pin:hover .pin-bubble,.map-pin.selected .pin-bubble{border-color:#e9a11a;scale:1.08}
+  .wind-marker{position:absolute;transform:translate(-50%,-50%);z-index:6;pointer-events:none}
+  .wind-arrow{display:block;font-size:30px;filter:drop-shadow(0 4px 4px rgba(0,0,0,.16));transform-origin:center}
+  .wind-tag{font-size:10px;background:#fff;padding:3px 7px;border-radius:10px;font-weight:900;white-space:nowrap;box-shadow:0 3px 8px rgba(0,0,0,.1)}
+  .legend{position:absolute;left:14px;bottom:14px;z-index:12;background:rgba(255,255,255,.9);padding:9px 10px;border-radius:14px;font-size:10px;font-weight:800;box-shadow:0 6px 16px rgba(0,0,0,.12)}
+  .map-note{position:absolute;right:14px;bottom:14px;z-index:12;background:rgba(37,52,45,.85);color:#fff;padding:8px 10px;border-radius:12px;font-size:10px}
+  .selected-place{padding:16px}
+  .place-cover{min-height:160px;border-radius:20px;background:linear-gradient(135deg,#e7f4db,#dceff3);display:grid;place-items:center;overflow:hidden;position:relative}
+  .place-cover img{width:100%;height:180px;object-fit:cover}
+  .cover-emoji{font-size:62px}
+  .place-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+  .chip{display:inline-flex;align-items:center;gap:5px;padding:6px 8px;border-radius:999px;background:#f0eee5;font-size:11px;font-weight:800}
+  .place-title{font-size:22px;font-weight:950;margin:12px 0 4px}
+  .place-desc{font-size:13px;color:var(--muted);line-height:1.6}
+  .quote{margin-top:14px;padding:14px 15px;border-radius:18px;background:#fff4c9;font-size:14px;line-height:1.6;font-weight:800}
+  .quote small{display:block;margin-top:7px;color:#88702c}
+  .discover{margin-top:10px;border-left:4px solid var(--green);padding:6px 0 6px 11px;font-size:12px;line-height:1.6;color:#52645a}
+  .teacher-layout{display:grid;grid-template-columns:minmax(520px,.9fr) minmax(520px,1.1fr);gap:16px}
+  .teacher-gate{max-width:520px;margin:60px auto;background:var(--card);border-radius:28px;padding:30px;box-shadow:var(--shadow);text-align:center}
+  .lock-icon{font-size:42px}
+  .teacher-gate h3{font-size:24px;margin:8px 0}
+  .teacher-gate p{color:var(--muted);font-size:13px;line-height:1.6}
+  .pin-row{display:flex;gap:8px;margin-top:18px}
+  .pin-row input{flex:1}
+  .form-wrap{padding:16px 18px 20px}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .field{display:grid;gap:7px}
+  .field.full{grid-column:1/-1}
+  .field label{font-size:12px;font-weight:900;color:#53645a}
+  .field input,.field select,.field textarea{
+    width:100%;border:1px solid #ded9ca;background:#fff;border-radius:14px;padding:11px 12px;color:var(--ink);outline:none
+  }
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:#7cae83;box-shadow:0 0 0 4px rgba(124,174,131,.13)}
+  .field textarea{min-height:90px;resize:vertical}
+  .photo-drop{border:2px dashed #cfccbf;border-radius:18px;padding:16px;text-align:center;background:#faf8f0}
+  .photo-preview{display:none;margin-top:10px;width:100%;max-height:220px;object-fit:cover;border-radius:14px}
+  .position-board{position:relative;aspect-ratio:16/7;border-radius:18px;overflow:hidden;border:1px solid #ddd9cc;background:#dfeec8;cursor:crosshair}
+  .position-dot{position:absolute;width:22px;height:22px;border-radius:50%;background:#f0a31e;border:4px solid #fff;box-shadow:0 4px 10px rgba(0,0,0,.25);transform:translate(-50%,-50%);pointer-events:none}
+  .xy{display:flex;gap:8px;color:var(--muted);font-size:11px;margin-top:6px}
+  .teacher-actions{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap}
+  .records-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .record-card{background:var(--card);border-radius:22px;overflow:hidden;box-shadow:var(--shadow);border:1px solid rgba(0,0,0,.04)}
+  .record-media{height:180px;background:linear-gradient(135deg,#dfeec9,#dbeff3);display:grid;place-items:center;font-size:54px;overflow:hidden}
+  .record-media img{width:100%;height:100%;object-fit:cover}
+  .record-body{padding:16px}
+  .record-body h4{margin:7px 0 6px;font-size:18px}
+  .record-body p{margin:0;color:var(--muted);font-size:12px;line-height:1.6}
+  .record-quote{margin-top:11px;padding:10px 11px;background:#fff3c2;border-radius:13px;font-size:12px;font-weight:800}
+  .record-actions{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
+  .record-date{font-size:10px;color:#8d968f}
+  .icon-btn{border:0;background:#f0eee5;border-radius:10px;padding:7px 9px}
+  .section-title{display:flex;justify-content:space-between;align-items:end;gap:12px;margin:6px 0 14px}
+  .section-title h3{margin:0;font-size:23px}
+  .section-title p{margin:4px 0 0;color:var(--muted);font-size:12px}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap}
+  .empty{padding:50px;text-align:center;color:var(--muted);background:var(--card);border-radius:20px}
+  .toast{position:fixed;left:50%;bottom:26px;z-index:100;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#20342a;color:#fff;padding:11px 16px;border-radius:999px;font-weight:800;font-size:12px;transition:.22s}
+  .toast.show{transform:translate(-50%,0);opacity:1}
+  .modal{position:fixed;inset:0;z-index:90;background:rgba(22,32,27,.44);display:none;place-items:center;padding:20px}
+  .modal.show{display:grid}
+  .modal-card{width:min(640px,100%);max-height:90vh;overflow:auto;background:var(--card);border-radius:28px;box-shadow:0 30px 80px rgba(0,0,0,.25)}
+  .modal-head{padding:18px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #ece8dc}
+  .modal-body{padding:18px}
+  .close{border:0;background:#efede4;border-radius:12px;padding:8px 10px}
+  .tiny{font-size:10px;color:var(--muted);line-height:1.5}
+  .footer-note{margin-top:22px;padding:14px 16px;background:#efecdf;border-radius:16px;color:#66736b;font-size:11px;line-height:1.6}
+  @media(max-width:1180px){
+    .child-grid{grid-template-columns:260px 1fr}.detail-panel{grid-column:1/-1}
+    .teacher-layout{grid-template-columns:1fr}
+  }
+  @media(max-width:820px){
+    header{align-items:flex-start;flex-wrap:wrap}
+    .tabs{order:3;width:100%}.tab{flex:1}
+    .top-actions{display:none}
+    .hero{grid-template-columns:1fr}.hero h2{font-size:28px}
+    .child-grid{grid-template-columns:1fr}
+    .map-stage{min-height:400px}
+    .records-grid{grid-template-columns:1fr 1fr}
+    .form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}
+  }
+  @media(max-width:560px){
+    .hero,main{padding-left:12px;padding-right:12px}.hero-card{padding:21px}
+    .hero h2{font-size:25px}.hero-side{border-radius:24px;padding:12px}
+    .records-grid{grid-template-columns:1fr}
+    .map-stage{min-height:360px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="brand">
+    <div class="brand-badge">🍃</div>
+    <div>
+      <h1>바람따라 부산대</h1>
+      <small>유아와 함께 만드는 산책·바람 기록 지도</small>
+    </div>
+  </div>
+  <nav class="tabs" aria-label="화면 선택">
+    <button class="tab active" data-view="child">유아 보기</button>
+    <button class="tab" data-view="teacher">교사 기록</button>
+    <button class="tab" data-view="records">우리 기록</button>
+  </nav>
+  <div class="top-actions">
+    <button class="ghost" id="fullscreenBtn">⛶ 발표 화면</button>
+    <button class="primary" data-go="teacher">＋ 기록하기</button>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-card">
+    <span class="eyebrow">🌱 부산대학교 부산캠퍼스 · 발표용 프로토타입</span>
+    <h2>아이들이 고르고, 걷고, 발견한 것을<br>우리만의 지도로 남겨요.</h2>
+    <p>산책 장소 투표 → 현장 탐색 → 바람의 방향·세기 표현 → 아이의 말과 사진 기록 → 다시 방문하며 비교하는 흐름입니다.</p>
+  </div>
+  <div class="hero-side">
+    <div class="metric"><span>우리 장소</span><strong id="metricPlaces">0</strong></div>
+    <div class="metric"><span>산책 기록</span><strong id="metricRecords">0</strong></div>
+    <div class="metric"><span>아이 의견</span><strong id="metricQuotes">0</strong></div>
+    <div class="metric"><span>누적 투표</span><strong id="metricVotes">0</strong></div>
+  </div>
+</section>
+
+<main>
+  <section class="view active" id="view-child">
+    <div class="child-grid">
+      <aside class="panel">
+        <div class="panel-head">
+          <div><h3>오늘 어디 갈까? 🗳️</h3><p>친구들과 가고 싶은 곳에 투표해요.</p></div>
+        </div>
+        <div class="vote-list" id="voteList"></div>
+      </aside>
+
+      <section class="panel map-panel">
+        <div class="map-toolbar">
+          <strong>🗺️ 우리가 만드는 부산대 탐험지도</strong>
+          <label class="switch"><input type="checkbox" id="windToggle" checked> 바람 표시</label>
+        </div>
+        <div class="map-stage" id="childMap">
+          <svg class="map-art" viewBox="0 0 1000 620" preserveAspectRatio="none" aria-hidden="true">
+            <rect width="1000" height="620" fill="#dfeec8"/>
+            <path d="M0 90 C170 20,300 80,450 45 S770 75,1000 20 V0 H0Z" fill="#a6cf86"/>
+            <path d="M0 510 C190 460,320 540,500 480 S820 450,1000 520 V620 H0Z" fill="#afd28e"/>
+            <path d="M-20 295 C170 315,170 210,360 240 S600 335,1020 190" fill="none" stroke="#f4edcf" stroke-width="52" stroke-linecap="round"/>
+            <path d="M110 630 C150 500,290 460,390 390 S515 250,600 130" fill="none" stroke="#f5efd6" stroke-width="44" stroke-linecap="round"/>
+            <path d="M420 620 C475 500,640 510,720 430 S780 270,900 190" fill="none" stroke="#f5efd6" stroke-width="38" stroke-linecap="round"/>
+            <path d="M650 0 C650 150,700 180,665 320 S610 500,650 620" fill="none" stroke="#c9e7ee" stroke-width="30"/>
+            <path d="M650 0 C650 150,700 180,665 320 S610 500,650 620" fill="none" stroke="#8ecddd" stroke-width="10"/>
+            <g fill="#8dbc72">
+              <circle cx="70" cy="130" r="45"/><circle cx="135" cy="92" r="30"/><circle cx="210" cy="150" r="42"/>
+              <circle cx="300" cy="90" r="38"/><circle cx="520" cy="95" r="42"/><circle cx="790" cy="80" r="38"/>
+              <circle cx="885" cy="100" r="45"/><circle cx="940" cy="250" r="50"/><circle cx="90" cy="420" r="44"/>
+              <circle cx="230" cy="500" r="46"/><circle cx="790" cy="515" r="48"/><circle cx="920" cy="460" r="39"/>
+            </g>
+            <g fill="#f6f2df" stroke="#d6d2bd" stroke-width="3">
+              <rect x="360" y="380" width="155" height="82" rx="7"/><rect x="390" y="335" width="95" height="55" rx="6"/>
+              <rect x="735" y="305" width="145" height="85" rx="7"/><rect x="170" y="260" width="120" height="80" rx="7"/>
+              <rect x="760" y="130" width="110" height="75" rx="7"/><rect x="450" y="160" width="100" height="62" rx="6"/>
+            </g>
+            <g fill="#a8cfe0">
+              <rect x="190" y="278" width="18" height="22"/><rect x="220" y="278" width="18" height="22"/><rect x="250" y="278" width="18" height="22"/>
+              <rect x="386" y="400" width="20" height="24"/><rect x="420" y="400" width="20" height="24"/><rect x="454" y="400" width="20" height="24"/>
+              <rect x="760" y="328" width="20" height="25"/><rect x="795" y="328" width="20" height="25"/><rect x="830" y="328" width="20" height="25"/>
+            </g>
+            <g opacity=".78">
+              <circle cx="330" cy="235" r="7" fill="#f3ba40"/><circle cx="350" cy="250" r="7" fill="#ef8c68"/><circle cx="318" cy="255" r="7" fill="#b694cf"/>
+              <circle cx="580" cy="410" r="7" fill="#ef8c68"/><circle cx="600" cy="425" r="7" fill="#f3ba40"/><circle cx="615" cy="402" r="7" fill="#b694cf"/>
+            </g>
+          </svg>
+          <div id="mapPins"></div>
+          <div id="windLayer"></div>
+          <div class="legend">💨 약한 바람 · 💨💨 보통 · 💨💨💨 강한 바람</div>
+          <div class="map-note">※ 발표용 개념 지도 · 실제 길찾기용 아님</div>
+        </div>
+      </section>
+
+      <aside class="panel detail-panel">
+        <div class="panel-head">
+          <div><h3>오늘의 발견 🔎</h3><p>지도 핀을 누르면 기록이 보여요.</p></div>
+        </div>
+        <div class="selected-place" id="selectedPlace"></div>
+      </aside>
+    </div>
+    <div class="footer-note">
+      장소명은 부산대학교 공식 부산캠퍼스 맵에 등재된 지점을 바탕으로 구성했습니다. 이 화면은 유아의 탐색과 기록을 위한 <b>교육용 개념 지도</b>이며 실제 캠퍼스 위치·동선 안내용 지도가 아닙니다.
+    </div>
+  </section>
+
+  <section class="view" id="view-teacher">
+    <div id="teacherGate" class="teacher-gate">
+      <div class="lock-icon">🔐</div>
+      <h3>교사 기록 모드</h3>
+      <p>발표 시 유아 화면과 구분하기 위한 간단한 잠금입니다.<br>기본 PIN은 <b>1234</b>입니다.</p>
+      <div class="pin-row">
+        <input id="teacherPin" type="password" inputmode="numeric" maxlength="8" placeholder="PIN 입력">
+        <button class="primary" id="unlockBtn">들어가기</button>
+      </div>
+    </div>
+
+    <div id="teacherWorkspace" hidden>
+      <div class="teacher-layout">
+        <section class="panel">
+          <div class="panel-head">
+            <div><h3>새 산책 기록 남기기 ✍️</h3><p>사진, 아이의 말, 바람과 발견을 한 번에 기록합니다.</p></div>
+          </div>
+          <form class="form-wrap" id="recordForm">
+            <div class="form-grid">
+              <div class="field full">
+                <label for="placeSelect">장소</label>
+                <select id="placeSelect" required></select>
+              </div>
+
+              <div class="field" id="newPlaceNameField" hidden>
+                <label for="newPlaceName">새 장소 이름</label>
+                <input id="newPlaceName" placeholder="예: 해울못">
+              </div>
+              <div class="field" id="newPlaceEmojiField" hidden>
+                <label for="newPlaceEmoji">아이 마크</label>
+                <input id="newPlaceEmoji" maxlength="4" value="🌿" placeholder="🌿">
+              </div>
+              <div class="field full" id="newPlacePositionField" hidden>
+                <label>지도에서 위치 지정</label>
+                <div class="position-board" id="positionBoard">
+                  <svg class="map-art" viewBox="0 0 1000 440" preserveAspectRatio="none" aria-hidden="true">
+                    <rect width="1000" height="440" fill="#dfeec8"/>
+                    <path d="M-20 210 C180 230,240 130,430 180 S700 280,1020 120" fill="none" stroke="#f4edcf" stroke-width="48" stroke-linecap="round"/>
+                    <path d="M160 460 C220 340,360 320,450 240 S560 130,620 -20" fill="none" stroke="#f4edcf" stroke-width="42" stroke-linecap="round"/>
+                    <path d="M690 -20 C680 120,730 170,700 280 S650 390,680 460" fill="none" stroke="#8ecddd" stroke-width="14"/>
+                    <g fill="#8dbc72"><circle cx="100" cy="90" r="50"/><circle cx="310" cy="80" r="40"/><circle cx="840" cy="80" r="52"/><circle cx="900" cy="340" r="46"/><circle cx="220" cy="350" r="45"/></g>
+                  </svg>
+                  <div class="position-dot" id="positionDot" style="left:50%;top:50%"></div>
+                </div>
+                <div class="xy"><span id="xLabel">X 50%</span><span id="yLabel">Y 50%</span></div>
+              </div>
+
+              <div class="field">
+                <label for="walkDate">날짜</label>
+                <input id="walkDate" type="date" required>
+              </div>
+              <div class="field">
+                <label for="childMark">아이들이 만든 마크</label>
+                <input id="childMark" maxlength="8" value="⭐" placeholder="⭐ / 🌱 / 🐾">
+              </div>
+              <div class="field full">
+                <label for="photoInput">사진 추가</label>
+                <div class="photo-drop">
+                  <input id="photoInput" type="file" accept="image/*">
+                  <div class="tiny" style="margin-top:7px">브라우저 안에서 자동 축소해 저장합니다.</div>
+                  <img id="photoPreview" class="photo-preview" alt="업로드 사진 미리보기">
+                </div>
+              </div>
+              <div class="field full">
+                <label for="childQuote">아이의 말</label>
+                <textarea id="childQuote" placeholder="예: “여기서는 나뭇잎이 계속 춤춰요!”"></textarea>
+              </div>
+              <div class="field full">
+                <label for="discovery">오늘의 발견 / 교사 메모</label>
+                <textarea id="discovery" placeholder="예: 같은 장소에서도 위치에 따라 바람 세기가 달랐음. 다음 산책에서 비교해 보기로 함."></textarea>
+              </div>
+              <div class="field">
+                <label for="windDirection">바람 방향</label>
+                <select id="windDirection">
+                  <option value="N">북쪽 ↑</option><option value="NE">북동쪽 ↗</option>
+                  <option value="E">동쪽 →</option><option value="SE">남동쪽 ↘</option>
+                  <option value="S">남쪽 ↓</option><option value="SW">남서쪽 ↙</option>
+                  <option value="W">서쪽 ←</option><option value="NW">북서쪽 ↖</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="windStrength">바람 세기</label>
+                <select id="windStrength">
+                  <option value="1">약함 · 살짝 느껴요</option>
+                  <option value="2" selected>보통 · 조금 세요</option>
+                  <option value="3">강함 · 아주 세요</option>
+                </select>
+              </div>
+            </div>
+            <div class="teacher-actions">
+              <button class="primary" type="submit">💾 지도에 기록 저장</button>
+              <button class="soft" type="button" id="previewChildBtn">👀 유아 화면에서 보기</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div><h3>교사 관리 도구 🧰</h3><p>발표용 데이터를 내보내거나 초기화할 수 있습니다.</p></div>
+          </div>
+          <div class="form-wrap">
+            <div class="toolbar">
+              <button class="ghost" id="exportBtn">⬇ JSON 내보내기</button>
+              <label class="ghost" style="cursor:pointer">⬆ JSON 불러오기<input id="importInput" type="file" accept=".json,application/json" hidden></label>
+              <button class="ghost" id="resetVotesBtn">🗳️ 투표만 초기화</button>
+              <button class="danger" id="resetAllBtn">↺ 데모로 초기화</button>
+            </div>
+            <div style="height:14px"></div>
+            <div class="field">
+              <label>저장 방식</label>
+              <div class="tiny">이 프로토타입은 별도 서버 없이 현재 브라우저의 <b>localStorage</b>에 기록합니다. 발표용 노트북에서 바로 실행하고 새로고침해도 기록이 유지됩니다. 다른 PC로 옮길 때는 JSON 내보내기/불러오기를 사용하세요.</div>
+            </div>
+            <div style="height:18px"></div>
+            <div class="field">
+              <label>등록된 장소</label>
+              <div id="placeAdmin"></div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="view-records">
+    <div class="section-title">
+      <div><h3>우리의 산책 기록 📚</h3><p>장소별 기록이 쌓이면서 아이들의 관찰과 생각 변화를 다시 볼 수 있습니다.</p></div>
+      <div class="toolbar">
+        <select id="recordFilter" class="ghost" style="padding:9px 12px"></select>
+      </div>
+    </div>
+    <div class="records-grid" id="recordsGrid"></div>
+  </section>
+</main>
+</div>
+
+<div class="modal" id="detailModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal-card">
+    <div class="modal-head"><strong id="modalTitle">기록</strong><button class="close" id="modalClose">✕</button></div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  const STORAGE_KEY = "pnu-kindergarten-walk-map-v1";
+  const TEACHER_PIN = "1234";
+  const $ = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+  const esc = (v="") => String(v).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]));
+  const dirDeg = {N:0,NE:45,E:90,SE:135,S:180,SW:225,W:270,NW:315};
+
+  const demo = {
+    places: [
+      {id:"neok", name:"넉넉한터", emoji:"🌳", x:33, y:34, votes:6, description:"넓게 열린 공간에서 바람과 몸의 움직임을 살펴봐요."},
+      {id:"miri", name:"미리내골", emoji:"💧", x:70, y:46, votes:4, description:"물길과 나무 사이에서 소리, 온도, 바람을 비교해봐요."},
+      {id:"sculpt", name:"조각공원", emoji:"🌀", x:28, y:69, votes:3, description:"조형물과 주변 자연의 모양을 관찰해요."},
+      {id:"library", name:"중앙도서관", emoji:"📚", x:56, y:62, votes:2, description:"건물 사이에서 바람이 어떻게 달라지는지 찾아봐요."}
+    ],
+    records: [
+      {id:"r1", placeId:"neok", date:"2026-11-08", mark:"⭐", photo:"", quote:"여기서는 나뭇잎이 계속 춤추는 것 같아요!", discovery:"열린 공간이라 다른 곳보다 바람을 더 잘 느낄 수 있다는 의견이 나왔어요.", windDirection:"NE", windStrength:3},
+      {id:"r2", placeId:"miri", date:"2026-11-06", mark:"💧", photo:"", quote:"물 옆은 조금 더 시원해요.", discovery:"아이들이 물 가까이와 길 안쪽의 느낌을 비교하기 시작했어요.", windDirection:"E", windStrength:1},
+      {id:"r3", placeId:"sculpt", date:"2026-11-02", mark:"🌀", photo:"", quote:"동그란 조각 옆에서 바람이 빙글 도는 것 같아요.", discovery:"보이는 형태를 바람의 움직임과 연결해 표현했어요.", windDirection:"NW", windStrength:2}
+    ]
+  };
+
+  let state = load();
+  let selectedPlaceId = state.places[0]?.id || null;
+  let teacherUnlocked = false;
+  let pendingPhoto = "";
+  let newX = 50, newY = 50;
+
+  function cloneDemo(){ return JSON.parse(JSON.stringify(demo)); }
+  function load(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return cloneDemo();
+      const parsed = JSON.parse(raw);
+      if(!Array.isArray(parsed.places) || !Array.isArray(parsed.records)) return cloneDemo();
+      return parsed;
+    }catch(e){ return cloneDemo(); }
+  }
+  function save(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    renderAll();
+  }
+  function toast(msg){
+    const el=$("#toast"); el.textContent=msg; el.classList.add("show");
+    clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.remove("show"),1800);
+  }
+  function uid(prefix){ return prefix+"_"+Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,6); }
+  function placeById(id){ return state.places.find(p=>p.id===id); }
+  function recordsFor(id){ return state.records.filter(r=>r.placeId===id).sort((a,b)=>b.date.localeCompare(a.date)); }
+  function latestFor(id){ return recordsFor(id)[0]; }
+  function voteTotal(){ return state.places.reduce((s,p)=>s+(Number(p.votes)||0),0); }
+
+  function renderMetrics(){
+    $("#metricPlaces").textContent=state.places.length;
+    $("#metricRecords").textContent=state.records.length;
+    $("#metricQuotes").textContent=state.records.filter(r=>r.quote?.trim()).length;
+    $("#metricVotes").textContent=voteTotal();
+  }
+  function renderVotes(){
+    const sorted=[...state.places].sort((a,b)=>(b.votes||0)-(a.votes||0));
+    $("#voteList").innerHTML=sorted.map(p=>`
+      <div class="vote-card">
+        <div class="vote-emoji">${esc(p.emoji||"📍")}</div>
+        <div><div class="vote-name">${esc(p.name)}</div><div class="vote-count">${p.votes||0}표 · 기록 ${recordsFor(p.id).length}개</div></div>
+        <button class="vote-btn" data-vote="${esc(p.id)}">투표</button>
+      </div>`).join("");
+    $$("[data-vote]").forEach(btn=>btn.onclick=()=>{
+      const p=placeById(btn.dataset.vote); if(!p) return;
+      p.votes=(Number(p.votes)||0)+1; save(); toast(`${p.name}에 한 표! 🌟`);
+    });
+  }
+  function renderMap(){
+    $("#mapPins").innerHTML=state.places.map(p=>`
+      <button class="map-pin ${p.id===selectedPlaceId?"selected":""}" style="left:${p.x}%;top:${p.y}%;" data-place="${esc(p.id)}" aria-label="${esc(p.name)}">
+        <div class="pin-bubble"><span>${esc(p.emoji||"📍")}</span></div>
+        <div class="pin-label">${esc(p.name)}</div>
+      </button>`).join("");
+    $$("[data-place]",$("#mapPins")).forEach(btn=>btn.onclick=()=>{ selectedPlaceId=btn.dataset.place; renderMap(); renderSelected(); });
+
+    const winds=[];
+    state.places.forEach(p=>{
+      const r=latestFor(p.id); if(!r) return;
+      const strength=Math.max(1,Math.min(3,Number(r.windStrength)||1));
+      winds.push(`<div class="wind-marker" style="left:${Math.min(94,p.x+5)}%;top:${Math.max(8,p.y-7)}%;">
+        <span class="wind-arrow" style="transform:rotate(${dirDeg[r.windDirection]||0}deg);font-size:${24+strength*7}px">➤</span>
+        <div class="wind-tag">${"💨".repeat(strength)}</div>
+      </div>`);
+    });
+    $("#windLayer").innerHTML=winds.join("");
+    $("#windLayer").style.display=$("#windToggle").checked?"block":"none";
+  }
+  function renderSelected(){
+    let p=placeById(selectedPlaceId) || state.places[0];
+    if(!p){ $("#selectedPlace").innerHTML='<div class="empty">장소를 먼저 등록해주세요.</div>'; return; }
+    selectedPlaceId=p.id;
+    const r=latestFor(p.id);
+    const photo=r?.photo;
+    $("#selectedPlace").innerHTML=`
+      <div class="place-cover">${photo?`<img src="${photo}" alt="${esc(p.name)} 기록 사진">`:`<div class="cover-emoji">${esc(p.emoji||"📍")}</div>`}</div>
+      <div class="place-meta">
+        <span class="chip">${esc(r?.mark||p.emoji||"📍")} 아이 마크</span>
+        <span class="chip">🗳️ ${p.votes||0}표</span>
+        <span class="chip">📚 ${recordsFor(p.id).length}개 기록</span>
+      </div>
+      <div class="place-title">${esc(p.name)}</div>
+      <div class="place-desc">${esc(p.description||"아이들과 함께 발견을 쌓아가는 장소예요.")}</div>
+      ${r?`
+        <div class="quote">“${esc(r.quote||"오늘의 아이 의견을 기록해보세요.")}”<small>${esc(r.date)}</small></div>
+        <div class="discover"><b>교사 메모</b><br>${esc(r.discovery||"아직 메모가 없어요.")}</div>
+        <div class="teacher-actions"><button class="soft" data-open-record="${esc(r.id)}">이 기록 자세히 보기</button></div>
+      `:`<div class="quote">아직 기록이 없어요. 교사 모드에서 첫 기록을 남겨보세요!</div>`}
+    `;
+    const btn=$("[data-open-record]",$("#selectedPlace")); if(btn) btn.onclick=()=>openRecord(btn.dataset.openRecord);
+  }
+
+  function renderPlaceSelects(){
+    const select=$("#placeSelect");
+    const cur=select.value;
+    select.innerHTML=state.places.map(p=>`<option value="${esc(p.id)}">${esc(p.emoji||"📍")} ${esc(p.name)}</option>`).join("")+
+      `<option value="__new__">＋ 새 장소 만들기</option>`;
+    if([...select.options].some(o=>o.value===cur)) select.value=cur;
+    const filter=$("#recordFilter"), fcur=filter.value;
+    filter.innerHTML=`<option value="all">전체 장소</option>`+state.places.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join("");
+    if([...filter.options].some(o=>o.value===fcur)) filter.value=fcur;
+  }
+  function renderAdmin(){
+    $("#placeAdmin").innerHTML=state.places.map(p=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #ece8db">
+        <div><b>${esc(p.emoji||"📍")} ${esc(p.name)}</b><div class="tiny">위치 ${p.x}% · ${p.y}% / ${p.votes||0}표</div></div>
+        <button class="icon-btn" data-delete-place="${esc(p.id)}" title="장소 삭제">🗑️</button>
+      </div>`).join("");
+    $$("[data-delete-place]").forEach(btn=>btn.onclick=()=>{
+      const p=placeById(btn.dataset.deletePlace); if(!p) return;
+      if(!confirm(`‘${p.name}’ 장소와 연결된 기록을 모두 삭제할까요?`)) return;
+      state.places=state.places.filter(x=>x.id!==p.id);
+      state.records=state.records.filter(r=>r.placeId!==p.id);
+      selectedPlaceId=state.places[0]?.id||null; save(); toast("장소를 삭제했어요.");
+    });
+  }
+  function renderRecords(){
+    const filter=$("#recordFilter").value||"all";
+    const list=state.records.filter(r=>filter==="all"||r.placeId===filter).sort((a,b)=>b.date.localeCompare(a.date));
+    const grid=$("#recordsGrid");
+    if(!list.length){ grid.innerHTML=`<div class="empty" style="grid-column:1/-1">아직 이 장소의 기록이 없어요.</div>`; return; }
+    grid.innerHTML=list.map(r=>{
+      const p=placeById(r.placeId); if(!p) return "";
+      return `<article class="record-card">
+        <div class="record-media">${r.photo?`<img src="${r.photo}" alt="${esc(p.name)} 사진">`:`${esc(r.mark||p.emoji||"🌿")}`}</div>
+        <div class="record-body">
+          <span class="chip">${esc(p.emoji||"📍")} ${esc(p.name)}</span>
+          <h4>${esc(r.mark||"🌿")} ${esc(r.date)}의 산책</h4>
+          <p>${esc(r.discovery||"오늘의 발견을 기록해보세요.")}</p>
+          ${r.quote?`<div class="record-quote">“${esc(r.quote)}”</div>`:""}
+          <div class="record-actions">
+            <span class="record-date">${esc(r.date)} · ${"💨".repeat(Number(r.windStrength)||1)}</span>
+            <div><button class="icon-btn" data-open="${esc(r.id)}">보기</button> <button class="icon-btn" data-delete="${esc(r.id)}">삭제</button></div>
+          </div>
+        </div>
+      </article>`;
+    }).join("");
+    $$("[data-open]").forEach(b=>b.onclick=()=>openRecord(b.dataset.open));
+    $$("[data-delete]").forEach(b=>b.onclick=()=>{
+      const r=state.records.find(x=>x.id===b.dataset.delete); if(!r) return;
+      if(!confirm("이 기록을 삭제할까요?")) return;
+      state.records=state.records.filter(x=>x.id!==r.id); save(); toast("기록을 삭제했어요.");
+    });
+  }
+  function openRecord(id){
+    const r=state.records.find(x=>x.id===id); if(!r) return;
+    const p=placeById(r.placeId); if(!p) return;
+    $("#modalTitle").textContent=`${p.emoji||"📍"} ${p.name} · ${r.date}`;
+    $("#modalBody").innerHTML=`
+      <div class="place-cover">${r.photo?`<img src="${r.photo}" alt="${esc(p.name)} 사진">`:`<div class="cover-emoji">${esc(r.mark||p.emoji||"🌿")}</div>`}</div>
+      <div class="place-meta"><span class="chip">${esc(r.mark||"🌿")} 아이 마크</span><span class="chip">바람 ${"💨".repeat(Number(r.windStrength)||1)}</span><span class="chip">방향 ${esc(r.windDirection||"-")}</span></div>
+      ${r.quote?`<div class="quote">“${esc(r.quote)}”</div>`:""}
+      <div class="discover" style="margin-top:14px"><b>오늘의 발견 / 교사 메모</b><br>${esc(r.discovery||"기록 없음")}</div>
+    `;
+    $("#detailModal").classList.add("show");
+  }
+  function renderAll(){
+    renderMetrics(); renderVotes(); renderMap(); renderSelected(); renderPlaceSelects(); renderAdmin(); renderRecords();
+  }
+  function go(view){
+    $$(".view").forEach(v=>v.classList.remove("active"));
+    $$(".tab").forEach(t=>t.classList.remove("active"));
+    $(`#view-${view}`).classList.add("active");
+    $(`.tab[data-view="${view}"]`)?.classList.add("active");
+    if(view==="teacher" && teacherUnlocked) $("#teacherPin").value="";
+    if(view==="records") renderRecords();
+    window.scrollTo({top:0,behavior:"smooth"});
+  }
+
+  $$(".tab").forEach(t=>t.onclick=()=>go(t.dataset.view));
+  $$("[data-go]").forEach(b=>b.onclick=()=>go(b.dataset.go));
+  $("#windToggle").onchange=renderMap;
+  $("#recordFilter").onchange=renderRecords;
+  $("#previewChildBtn").onclick=()=>go("child");
+
+  $("#unlockBtn").onclick=()=>{
+    if($("#teacherPin").value===TEACHER_PIN){
+      teacherUnlocked=true; $("#teacherGate").hidden=true; $("#teacherWorkspace").hidden=false; toast("교사 모드가 열렸어요.");
+    }else toast("PIN이 달라요. 기본 PIN은 1234입니다.");
+  };
+  $("#teacherPin").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#unlockBtn").click(); });
+
+  $("#placeSelect").onchange=()=>{
+    const isNew=$("#placeSelect").value==="__new__";
+    ["newPlaceNameField","newPlaceEmojiField","newPlacePositionField"].forEach(id=>$("#"+id).hidden=!isNew);
+  };
+  $("#positionBoard").onclick=(e)=>{
+    const rect=e.currentTarget.getBoundingClientRect();
+    newX=Math.max(5,Math.min(95,Math.round((e.clientX-rect.left)/rect.width*100)));
+    newY=Math.max(8,Math.min(92,Math.round((e.clientY-rect.top)/rect.height*100)));
+    $("#positionDot").style.left=newX+"%"; $("#positionDot").style.top=newY+"%";
+    $("#xLabel").textContent=`X ${newX}%`; $("#yLabel").textContent=`Y ${newY}%`;
+  };
+
+  $("#photoInput").onchange=async(e)=>{
+    const file=e.target.files?.[0]; if(!file){ pendingPhoto=""; return; }
+    if(!file.type.startsWith("image/")){ toast("이미지 파일을 선택해주세요."); return; }
+    try{
+      pendingPhoto=await resizeImage(file, 1100, .78);
+      $("#photoPreview").src=pendingPhoto; $("#photoPreview").style.display="block";
+      toast("사진을 준비했어요.");
+    }catch(err){ toast("사진을 읽지 못했어요."); }
+  };
+  function resizeImage(file,max,q){
+    return new Promise((resolve,reject)=>{
+      const reader=new FileReader();
+      reader.onload=()=>{
+        const img=new Image();
+        img.onload=()=>{
+          const ratio=Math.min(1,max/Math.max(img.width,img.height));
+          const c=document.createElement("canvas"); c.width=Math.round(img.width*ratio); c.height=Math.round(img.height*ratio);
+          c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+          resolve(c.toDataURL("image/jpeg",q));
+        };
+        img.onerror=reject; img.src=reader.result;
+      };
+      reader.onerror=reject; reader.readAsDataURL(file);
+    });
+  }
+
+  $("#recordForm").onsubmit=(e)=>{
+    e.preventDefault();
+    let placeId=$("#placeSelect").value;
+    if(placeId==="__new__"){
+      const name=$("#newPlaceName").value.trim();
+      if(!name){ toast("새 장소 이름을 적어주세요."); return; }
+      placeId=uid("place");
+      state.places.push({id:placeId,name,emoji:$("#newPlaceEmoji").value.trim()||"🌿",x:newX,y:newY,votes:0,description:"아이들이 새롭게 발견해 지도에 추가한 장소예요."});
+    }
+    const record={
+      id:uid("record"), placeId,
+      date:$("#walkDate").value,
+      mark:$("#childMark").value.trim()||"⭐",
+      photo:pendingPhoto,
+      quote:$("#childQuote").value.trim(),
+      discovery:$("#discovery").value.trim(),
+      windDirection:$("#windDirection").value,
+      windStrength:Number($("#windStrength").value)
+    };
+    state.records.push(record); selectedPlaceId=placeId;
+    try{ save(); }
+    catch(err){
+      if(String(err).includes("Quota")) toast("사진 저장 공간이 부족해요. 사진 크기를 줄이거나 기존 기록을 삭제해주세요.");
+      else toast("저장 중 문제가 생겼어요.");
+      return;
+    }
+    e.target.reset(); $("#walkDate").value=new Date().toISOString().slice(0,10); $("#childMark").value="⭐"; $("#newPlaceEmoji").value="🌿";
+    pendingPhoto=""; $("#photoPreview").style.display="none"; $("#photoPreview").src="";
+    ["newPlaceNameField","newPlaceEmojiField","newPlacePositionField"].forEach(id=>$("#"+id).hidden=true);
+    toast("지도에 새 기록을 저장했어요! 🍃");
+  };
+
+  $("#exportBtn").onclick=()=>{
+    const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+    const url=URL.createObjectURL(blob), a=document.createElement("a");
+    a.href=url; a.download=`부산대_유아산책지도_${new Date().toISOString().slice(0,10)}.json`; a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),500); toast("기록 파일을 내보냈어요.");
+  };
+  $("#importInput").onchange=async(e)=>{
+    const file=e.target.files?.[0]; if(!file) return;
+    try{
+      const parsed=JSON.parse(await file.text());
+      if(!Array.isArray(parsed.places)||!Array.isArray(parsed.records)) throw new Error();
+      state=parsed; selectedPlaceId=state.places[0]?.id||null; save(); toast("기록을 불러왔어요.");
+    }catch(err){ toast("올바른 기록 파일이 아니에요."); }
+    e.target.value="";
+  };
+  $("#resetVotesBtn").onclick=()=>{
+    if(!confirm("모든 장소의 투표 수를 0으로 만들까요?")) return;
+    state.places.forEach(p=>p.votes=0); save(); toast("투표를 초기화했어요.");
+  };
+  $("#resetAllBtn").onclick=()=>{
+    if(!confirm("추가한 모든 기록을 지우고 처음 데모 상태로 돌아갈까요?")) return;
+    state=cloneDemo(); selectedPlaceId=state.places[0].id; save(); toast("데모 상태로 돌아왔어요.");
+  };
+
+  $("#modalClose").onclick=()=>$("#detailModal").classList.remove("show");
+  $("#detailModal").onclick=(e)=>{ if(e.target.id==="detailModal") e.currentTarget.classList.remove("show"); };
+  document.addEventListener("keydown",e=>{ if(e.key==="Escape") $("#detailModal").classList.remove("show"); });
+
+  $("#fullscreenBtn").onclick=async()=>{
+    try{
+      if(!document.fullscreenElement) await document.documentElement.requestFullscreen();
+      else await document.exitFullscreen();
+    }catch(e){ toast("이 브라우저에서는 전체 화면을 사용할 수 없어요."); }
+  };
+
+  $("#walkDate").value=new Date().toISOString().slice(0,10);
+  renderAll();
+})();
+</script>
+</body>
+</html>
