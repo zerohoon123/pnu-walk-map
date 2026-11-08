@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#f6f3e8">
 <title>사랑반 산책 지도 | 유아 산책 기록 지도</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
   :root{
     --paper:#f7f4e9;
@@ -111,7 +112,14 @@
   .weather-marker .w-icon{font-size:20px;line-height:1}
   .weather-marker .w-temp{font-size:11px;font-weight:900;color:#c4572d}
   .legend{position:absolute;left:14px;bottom:14px;z-index:12;background:rgba(255,255,255,.9);padding:9px 10px;border-radius:14px;font-size:10px;font-weight:800;box-shadow:0 6px 16px rgba(0,0,0,.12)}
-  .map-note{position:absolute;right:14px;bottom:14px;z-index:12;background:rgba(37,52,45,.85);color:#fff;padding:8px 10px;border-radius:12px;font-size:10px}
+  #leafletMap{position:absolute;inset:0;z-index:0;background:#e8eadf}
+  .lf-icon{background:none;border:0}
+  .lf-icon .map-pin{left:0;top:0;cursor:pointer}
+  .map-offline{position:absolute;inset:0;z-index:5;display:grid;place-items:center;font-weight:900;color:var(--muted);background:#f1efe4}
+  .map-offline[hidden]{display:none}
+  .map-mode{position:absolute;top:12px;right:12px;z-index:500;border:0;background:#fff;border-radius:999px;padding:10px 14px;font-size:14px;font-weight:900;color:var(--ink);box-shadow:0 4px 12px rgba(0,0,0,.18)}
+  .legend{z-index:500}
+  .leaflet-container{font:inherit}
   .selected-place{padding:16px}
   .place-cover{min-height:160px;border-radius:20px;background:linear-gradient(135deg,#e7f4db,#dceff3);display:grid;place-items:center;overflow:hidden;position:relative}
   .place-cover img{width:100%;height:180px;object-fit:cover}
@@ -206,7 +214,7 @@
   .kid-tile .k-label{display:block;font-size:15px;font-weight:900;margin-top:5px}
   .kid-tile .k-sub{display:block;font-size:12px;color:var(--muted);margin-top:2px}
   #view-child .quote{font-size:17px}
-  .kid-avatar{position:absolute;z-index:9;transform:translate(-50%,-100%);transition-property:left,top;transition-timing-function:ease-in-out;pointer-events:none}
+  .kid-avatar{position:absolute;left:0;top:0;transform:translate(-50%,0);pointer-events:none}
   .kid-avatar.no-anim{transition:none}
   .kid-avatar.flip svg{transform:scaleX(-1)}
   .kid-avatar svg{display:block;filter:drop-shadow(0 3px 3px rgba(0,0,0,.15))}
@@ -217,8 +225,8 @@
   @keyframes hop{50%{transform:translateY(-5px)}}
   @keyframes swingA{from{transform:rotate(-22deg)}to{transform:rotate(22deg)}}
   @keyframes swingB{from{transform:rotate(22deg)}to{transform:rotate(-22deg)}}
-  .kid-bubble{position:absolute;left:50%;bottom:100%;transform:translate(-50%,4px) scale(.6);opacity:0;background:#fff;border-radius:12px;padding:5px 9px;font-size:12px;font-weight:900;white-space:nowrap;box-shadow:0 4px 10px rgba(0,0,0,.15);transition:.25s}
-  .kid-bubble.show{opacity:1;transform:translate(-50%,-2px) scale(1)}
+  .kid-bubble{position:absolute;left:calc(100% - 4px);bottom:55%;transform:translate(0,4px) scale(.6);opacity:0;background:#fff;border-radius:12px;padding:5px 9px;font-size:12px;font-weight:900;white-space:nowrap;box-shadow:0 4px 10px rgba(0,0,0,.15);transition:.25s}
+  .kid-bubble.show{opacity:1;transform:translate(0,0) scale(1)}
   .burst{position:fixed;z-index:120;font-size:28px;pointer-events:none;transform:translate(-50%,-50%);animation:burst .9s ease-out forwards}
   @keyframes burst{to{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1.3);opacity:0}}
   @media (prefers-reduced-motion:reduce){.kid-avatar{transition:none}.kid-avatar *{animation:none!important}.map-pin.selected .pin-bubble,.burst{animation:none}.burst{display:none}}
@@ -291,107 +299,14 @@
 
       <section class="panel map-panel">
         <div class="map-toolbar">
-          <strong>🗺️ 우리가 만드는 부산대 탐험지도</strong>
+          <strong>🗺️ 부산대 탐험지도</strong>
           <span style="display:flex;gap:8px;flex-wrap:wrap"><label class="switch"><input type="checkbox" id="windToggle" checked> 💨 바람</label><label class="switch"><input type="checkbox" id="weatherToggle" checked> 🌦️ 날씨</label><label class="switch"><input type="checkbox" id="soundToggle" checked> 🔊 소리</label></span>
         </div>
         <div class="map-stage" id="childMap">
-          <svg class="map-art" viewBox="0 0 1000 620" preserveAspectRatio="none" aria-hidden="true">
-            <defs>
-              <linearGradient id="gGrass" x1="0" y1="0" x2="0.3" y2="1"><stop offset="0" stop-color="#cfe4ae"/><stop offset="1" stop-color="#bcd898"/></linearGradient>
-              <pattern id="pGrass" width="14" height="14" patternUnits="userSpaceOnUse"><circle cx="3" cy="4" r="1" fill="#a9c985" opacity=".55"/><circle cx="10" cy="11" r=".9" fill="#dcebc2" opacity=".7"/></pattern>
-              <linearGradient id="gWater" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7fc3d8"/><stop offset=".5" stop-color="#a8dceb"/><stop offset="1" stop-color="#6fb6cc"/></linearGradient>
-              <radialGradient id="gTree" cx=".38" cy=".35" r=".7"><stop offset="0" stop-color="#9ccf78"/><stop offset=".7" stop-color="#6aa654"/><stop offset="1" stop-color="#4f8b44"/></radialGradient>
-              <radialGradient id="gTreeDark" cx=".38" cy=".35" r=".7"><stop offset="0" stop-color="#7fb565"/><stop offset="1" stop-color="#3f7a3c"/></radialGradient>
-              <linearGradient id="gRoof" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7f2e6"/><stop offset="1" stop-color="#e6dfcd"/></linearGradient>
-              <linearGradient id="gRoofRed" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9a58a"/><stop offset="1" stop-color="#cf8468"/></linearGradient>
-              <filter id="fShadow" x="-20%" y="-20%" width="150%" height="160%"><feDropShadow dx="5" dy="7" stdDeviation="3" flood-color="#3c4a2c" flood-opacity=".28"/></filter>
-            </defs>
-            <!-- 잔디 -->
-            <rect width="1000" height="620" fill="url(#gGrass)"/>
-            <rect width="1000" height="620" fill="url(#pGrass)"/>
-            <!-- 북쪽 산자락(숲) -->
-            <path d="M0 0 H1000 V70 C900 105,820 80,720 98 S520 70,420 92 S220 70,120 96 S30 80,0 90Z" fill="#9cc47c"/>
-            <path d="M0 0 H1000 V40 C880 70,760 46,640 60 S380 40,260 58 S80 44,0 55Z" fill="#86b468"/>
-            <!-- 넉넉한터 잔디 광장 -->
-            <ellipse cx="320" cy="172" rx="128" ry="58" fill="#d9edbd" stroke="#c4dca4" stroke-width="3"/>
-            <ellipse cx="320" cy="172" rx="128" ry="58" fill="none" stroke="#efe6cb" stroke-width="9" stroke-dasharray="2 0" opacity=".9" transform="translate(0 0)"/>
-            <g fill="#8b6b4a"><rect x="232" y="128" width="20" height="6" rx="2"/><rect x="388" y="128" width="20" height="6" rx="2"/><rect x="232" y="212" width="20" height="6" rx="2"/><rect x="388" y="212" width="20" height="6" rx="2"/></g>
-            <!-- 하천(미리내골) -->
-            <path d="M650 0 C650 150,700 180,665 320 S610 500,650 620" fill="none" stroke="#d8cfb0" stroke-width="46" stroke-linecap="round"/>
-            <path d="M650 0 C650 150,700 180,665 320 S610 500,650 620" fill="none" stroke="#b9c9a0" stroke-width="36"/>
-            <path d="M650 0 C650 150,700 180,665 320 S610 500,650 620" fill="none" stroke="url(#gWater)" stroke-width="24"/>
-            <path d="M650 0 C650 150,700 180,665 320 S610 500,650 620" fill="none" stroke="#e9f8fc" stroke-width="2" stroke-dasharray="10 22" opacity=".9"/>
-            <ellipse cx="688" cy="345" rx="40" ry="22" fill="#d8cfb0"/><ellipse cx="688" cy="345" rx="33" ry="16" fill="url(#gWater)"/>
-            <g fill="#a9a493"><circle cx="648" cy="372" r="5"/><circle cx="715" cy="330" r="4"/><circle cx="640" cy="230" r="4"/><circle cx="690" cy="168" r="5"/><circle cx="628" cy="470" r="4"/></g>
-            <!-- 산책로 -->
-            <path d="M110 630 C150 500,290 460,390 390 S515 250,600 130" fill="none" stroke="#d9cda8" stroke-width="30" stroke-linecap="round"/>
-            <path d="M110 630 C150 500,290 460,390 390 S515 250,600 130" fill="none" stroke="#f1e8cc" stroke-width="24" stroke-linecap="round"/>
-            <path d="M420 620 C475 500,640 510,720 430 S780 270,900 190" fill="none" stroke="#d9cda8" stroke-width="28" stroke-linecap="round"/>
-            <path d="M420 620 C475 500,640 510,720 430 S780 270,900 190" fill="none" stroke="#f1e8cc" stroke-width="22" stroke-linecap="round"/>
-            <!-- 차도 -->
-            <path d="M-20 295 C170 315,170 210,360 240 S600 335,1020 190" fill="none" stroke="#e6e1d2" stroke-width="62" stroke-linecap="round"/>
-            <path d="M-20 295 C170 315,170 210,360 240 S600 335,1020 190" fill="none" stroke="#9e9d96" stroke-width="48" stroke-linecap="round"/>
-            <path d="M-20 295 C170 315,170 210,360 240 S600 335,1020 190" fill="none" stroke="#fdf6d8" stroke-width="2.5" stroke-dasharray="18 14"/>
-            <!-- 조각공원 -->
-            <circle cx="280" cy="425" r="62" fill="#e8e0c7" stroke="#d3c9aa" stroke-width="3"/>
-            <circle cx="280" cy="425" r="40" fill="#cfe5b0"/>
-            <g filter="url(#fShadow)"><circle cx="246" cy="392" r="9" fill="#b7b3a6"/><rect x="306" y="440" width="15" height="15" rx="2" fill="#c9a76d"/><circle cx="312" cy="398" r="8" fill="none" stroke="#9aa3a8" stroke-width="5"/><path d="M240 455 l10 -18 l10 18z" fill="#8fa2b8"/></g>
-            <!-- 주차장 -->
-            <rect x="820" y="470" width="150" height="96" rx="8" fill="#b4b2aa"/>
-            <g stroke="#f4f1e6" stroke-width="2"><line x1="845" y1="470" x2="845" y2="505"/><line x1="870" y1="470" x2="870" y2="505"/><line x1="895" y1="470" x2="895" y2="505"/><line x1="920" y1="470" x2="920" y2="505"/><line x1="945" y1="470" x2="945" y2="505"/><line x1="845" y1="531" x2="845" y2="566"/><line x1="870" y1="531" x2="870" y2="566"/><line x1="895" y1="531" x2="895" y2="566"/><line x1="920" y1="531" x2="920" y2="566"/><line x1="945" y1="531" x2="945" y2="566"/></g>
-            <g filter="url(#fShadow)"><rect x="826" y="476" width="14" height="24" rx="4" fill="#e66b5b"/><rect x="876" y="476" width="14" height="24" rx="4" fill="#f4f4f4"/><rect x="926" y="476" width="14" height="24" rx="4" fill="#5b86c9"/><rect x="851" y="537" width="14" height="24" rx="4" fill="#3d4448"/><rect x="901" y="537" width="14" height="24" rx="4" fill="#f2c94c"/></g>
-            <!-- 건물 -->
-            <g filter="url(#fShadow)">
-              <rect x="470" y="290" width="170" height="78" rx="4" fill="url(#gRoof)" stroke="#cfc6b0" stroke-width="2"/>
-              <rect x="590" y="368" width="50" height="40" rx="3" fill="url(#gRoof)" stroke="#cfc6b0" stroke-width="2"/>
-              <rect x="120" y="318" width="120" height="62" rx="4" fill="url(#gRoofRed)" stroke="#b7735a" stroke-width="2"/>
-              <rect x="752" y="330" width="138" height="80" rx="4" fill="url(#gRoof)" stroke="#cfc6b0" stroke-width="2"/>
-              <rect x="768" y="118" width="108" height="66" rx="4" fill="url(#gRoofRed)" stroke="#b7735a" stroke-width="2"/>
-              <rect x="430" y="118" width="96" height="54" rx="4" fill="url(#gRoof)" stroke="#cfc6b0" stroke-width="2"/>
-              <rect x="30" y="448" width="98" height="58" rx="4" fill="url(#gRoof)" stroke="#cfc6b0" stroke-width="2"/>
-            </g>
-            <g fill="#d5ccb6"><rect x="490" y="304" width="22" height="14" rx="2"/><rect x="520" y="304" width="22" height="14" rx="2"/><rect x="600" y="340" width="26" height="16" rx="2"/><rect x="772" y="346" width="20" height="12" rx="2"/><rect x="452" y="132" width="18" height="12" rx="2"/><rect x="48" y="462" width="18" height="12" rx="2"/></g>
-            <g fill="#9ccfe0" opacity=".8"><rect x="560" y="300" width="70" height="4" rx="2"/><rect x="560" y="352" width="70" height="4" rx="2"/><rect x="800" y="392" width="76" height="4" rx="2"/></g>
-            <g stroke="#c9a088" stroke-width="2" opacity=".55"><line x1="120" y1="349" x2="240" y2="349"/><line x1="768" y1="151" x2="876" y2="151"/></g>
-            <!-- 도서관 앞 계단 -->
-            <g fill="#ebe4d0" stroke="#d3c9aa" stroke-width="1.5"><rect x="530" y="368" width="54" height="8"/><rect x="526" y="376" width="62" height="8"/></g>
-            <!-- 꽃밭 -->
-            <g opacity=".9"><circle cx="330" cy="246" r="0" fill="none"/>
-              <circle cx="582" cy="410" r="6" fill="#ef8c68"/><circle cx="596" cy="420" r="6" fill="#f3ba40"/><circle cx="572" cy="422" r="6" fill="#b694cf"/><circle cx="588" cy="432" r="5" fill="#ef8c68"/>
-              <circle cx="210" cy="190" r="6" fill="#f3ba40"/><circle cx="222" cy="200" r="6" fill="#ef8c68"/><circle cx="200" cy="203" r="5" fill="#b694cf"/>
-            </g>
-            <g id="treeLayer"></g>
-            <!-- 방위표 -->
-            <g transform="translate(958 42)"><circle r="22" fill="#fffdf5" opacity=".92" stroke="#c8c2ad" stroke-width="2"/><path d="M0 -15 L6 4 L0 0 L-6 4Z" fill="#d1553d"/><path d="M0 15 L6 -4 L0 0 L-6 -4Z" fill="#8a9089"/><text y="-3" x="0" font-size="0">N</text></g>
-            <text x="958" y="78" text-anchor="middle" font-size="11" font-weight="900" fill="#4d5c51">북 N</text>
-          </svg>
-          <div id="mapPins"></div>
-          <div id="windLayer"></div>
-          <div id="weatherLayer"></div>
-          <div class="kid-avatar" id="kidAvatar" aria-hidden="true">
-            <div class="kid-bubble" id="kidBubble">도착! ✨</div>
-            <div class="kid-body">
-              <svg viewBox="0 0 60 84" width="48" height="67">
-                <ellipse cx="30" cy="80" rx="16" ry="4" fill="#2e3b30" opacity=".22"/>
-                <rect class="leg-l" x="21" y="56" width="8" height="20" rx="4" fill="#3b4a6b"/>
-                <rect class="leg-r" x="31" y="56" width="8" height="20" rx="4" fill="#3b4a6b"/>
-                <ellipse cx="25" cy="77" rx="6" ry="3.5" fill="#e0533d"/><ellipse cx="35" cy="77" rx="6" ry="3.5" fill="#e0533d"/>
-                <rect class="arm-l" x="9" y="38" width="8" height="18" rx="4" fill="#ffd9b8"/>
-                <rect class="arm-r" x="43" y="38" width="8" height="18" rx="4" fill="#ffd9b8"/>
-                <path d="M15 40 Q30 30 45 40 L48 62 Q30 66 12 62Z" fill="#ffcf3f" stroke="#e5b22a" stroke-width="1.5"/>
-                <path d="M30 47 c-2.5 -3.5 -7.5 -1.5 -5.5 2 l5.5 5.5 l5.5 -5.5 c2 -3.5 -3 -5.5 -5.5 -2z" fill="#e85a6b"/>
-                <circle cx="30" cy="24" r="14" fill="#ffdcbf"/>
-                <path d="M16.5 23 Q17 9 30 9 Q43 9 43.5 23 Q38 16 30 17 Q22 16 16.5 23Z" fill="#4a3226"/>
-                <path d="M13 17 Q30 -2 47 17 Z" fill="#ffcf3f" stroke="#e5b22a" stroke-width="1.5"/>
-                <ellipse cx="30" cy="17" rx="20" ry="3.2" fill="#ffd95c" stroke="#e5b22a" stroke-width="1.2"/>
-                <circle cx="25" cy="25" r="1.9" fill="#2b2b2b"/><circle cx="35" cy="25" r="1.9" fill="#2b2b2b"/>
-                <circle cx="21.5" cy="29.5" r="2.6" fill="#ff9ea3" opacity=".7"/><circle cx="38.5" cy="29.5" r="2.6" fill="#ff9ea3" opacity=".7"/>
-                <path d="M26.5 30.5 Q30 33.5 33.5 30.5" fill="none" stroke="#a5523e" stroke-width="1.6" stroke-linecap="round"/>
-              </svg>
-            </div>
-          </div>
+          <div id="leafletMap" aria-label="부산대학교 지도"></div>
+          <button type="button" class="map-mode" id="mapModeBtn">🛰️ 하늘에서 보기</button>
           <div class="legend">💨 약한 바람 · 💨💨 보통 · 💨💨💨 강한 바람<br>☀️ 맑음 · ⛅ 구름 조금 · ☁️ 흐림 · 🌧️ 비 · ❄️ 눈 · 🌡️ 기온</div>
-          <div class="map-note">※ 발표용 개념 지도 · 실제 길찾기용 아님</div>
+          <div class="map-offline" id="mapOffline" hidden>🌐 지도를 보려면 인터넷 연결이 필요해요.</div>
         </div>
       </section>
 
@@ -403,7 +318,7 @@
       </aside>
     </div>
     <div class="footer-note">
-      장소명은 부산대학교 공식 부산캠퍼스 맵에 등재된 지점을 바탕으로 구성했습니다. 이 화면은 유아의 탐색과 기록을 위한 <b>교육용 개념 지도</b>이며 실제 캠퍼스 위치·동선 안내용 지도가 아닙니다.
+      지도: © OpenStreetMap 기여자 · 위성 사진: Esri. 넉넉한터·미리내골(미리내 생태보호구역)·중앙도서관(제1도서관)의 위치와 영역은 OpenStreetMap 자료를 사용했습니다. 조각공원은 지도 자료에 없어 예술관 주변에 <b>임시 위치</b>로 두었으니 교사 모드에서 실제 위치로 옮겨 주세요.
     </div>
   </section>
 
@@ -441,11 +356,8 @@
               </div>
               <div class="field full" id="newPlacePositionField" hidden>
                 <label>지도에서 위치 지정</label>
-                <div class="position-board" id="positionBoard">
-                  
-                  <div class="position-dot" id="positionDot" style="left:50%;top:50%"></div>
-                </div>
-                <div class="xy"><span id="xLabel">X 50%</span><span id="yLabel">Y 50%</span></div>
+                <div class="position-board" id="positionBoard"></div>
+                <div class="xy" id="newPosLabel">지도를 눌러 새 장소의 위치를 정해 주세요.</div>
               </div>
 
               <div class="field">
@@ -542,6 +454,13 @@
               <label>등록된 장소</label>
               <div id="placeAdmin"></div>
             </div>
+            <div style="height:18px"></div>
+            <div class="field">
+              <label for="editPlaceSelect">장소 위치·영역 조정</label>
+              <select id="editPlaceSelect"></select>
+              <div class="position-board" id="editBoard"></div>
+              <div class="tiny">핀을 끌어서 실제 위치로 옮기면 바로 저장돼요. 색칠된 장소 영역도 함께 옮겨집니다. 점선 영역은 임시 위치예요.</div>
+            </div>
           </div>
         </section>
       </div>
@@ -568,6 +487,7 @@
 </div>
 <div class="toast" id="toast"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
 (() => {
   const STORAGE_KEY = "pnu-kindergarten-walk-map-v1";
@@ -637,12 +557,21 @@
     return parts.join(" ");
   }
 
+  const AREA_NEOK = [[35.232263, 129.082006], [35.232282, 129.081935], [35.231659, 129.081667], [35.231348, 129.082704], [35.231499, 129.082762], [35.23147, 129.082866], [35.231425, 129.08294], [35.231303, 129.082979], [35.231295, 129.083046], [35.23143, 129.083257], [35.23144, 129.083318], [35.231377, 129.083664], [35.231417, 129.083726], [35.23145, 129.084006], [35.231549, 129.083994], [35.231703, 129.083183], [35.231859, 129.083213], [35.231825, 129.083364], [35.231873, 129.083374], [35.232004, 129.083277], [35.232142, 129.083323], [35.232219, 129.083021], [35.232255, 129.082877], [35.232207, 129.082857], [35.232303, 129.082504], [35.232398, 129.082152], [35.232334, 129.082123], [35.232356, 129.082045], [35.232263, 129.082006]];
+  const AREA_MIRI = [[35.233362, 129.078631], [35.233322, 129.07851], [35.233205, 129.078736], [35.233141, 129.079137], [35.233156, 129.07915], [35.233168, 129.079218], [35.233209, 129.079408], [35.233422, 129.079694], [35.233388, 129.079945], [35.233179, 129.080671], [35.233173, 129.080708], [35.233165, 129.080759], [35.233065, 129.081446], [35.23294, 129.081999], [35.232952, 129.082044], [35.233019, 129.082064], [35.233048, 129.082044], [35.23319, 129.081487], [35.233244, 129.08109], [35.233292, 129.080793], [35.233302, 129.080759], [35.233533, 129.079927], [35.23365, 129.079499], [35.233687, 129.079314], [35.233654, 129.079292], [35.233585, 129.079271], [35.233552, 129.079356], [35.23354, 129.079481], [35.233449, 129.079532], [35.233307, 129.07937], [35.233289, 129.079255], [35.233258, 129.079188], [35.23325, 129.079144], [35.233238, 129.079128], [35.233256, 129.078936], [35.233362, 129.078631]];
+  const AREA_LIB = [[35.234699, 129.07886], [35.234764, 129.078544], [35.234659, 129.078509], [35.234671, 129.078454], [35.234461, 129.078385], [35.234451, 129.078437], [35.234332, 129.0784], [35.234302, 129.078532], [35.234259, 129.07852], [35.234299, 129.07833], [35.234027, 129.078241], [35.233993, 129.078283], [35.233916, 129.078683], [35.233908, 129.078721], [35.234194, 129.07881], [35.234204, 129.07877], [35.234211, 129.078739], [35.234243, 129.078583], [35.234288, 129.078598], [35.234262, 129.078727], [35.234699, 129.07886]];
+  const CAMPUS = [[35.237535, 129.079004], [35.237212, 129.079447], [35.236866, 129.080436], [35.236802, 129.080717], [35.236834, 129.080853], [35.236815, 129.081165], [35.236923, 129.081195], [35.236909, 129.082941], [35.2363, 129.082944], [35.235582, 129.082943], [35.235426, 129.082931], [35.234217, 129.082893], [35.233687, 129.08384], [35.233578, 129.083912], [35.23331, 129.084687], [35.232571, 129.084457], [35.232503, 129.084389], [35.23268, 129.083514], [35.232002, 129.08329], [35.231859, 129.083397], [35.231711, 129.084227], [35.230048, 129.083738], [35.230071, 129.083516], [35.230076, 129.083377], [35.230083, 129.083076], [35.230086, 129.082895], [35.229989, 129.082891], [35.229991, 129.082764], [35.229999, 129.082624], [35.230157, 129.082244], [35.230438, 129.082234], [35.230578, 129.081896], [35.23061, 129.081676], [35.230412, 129.081432], [35.229949, 129.081197], [35.23007, 129.080634], [35.230275, 129.080192], [35.230675, 129.079518], [35.230985, 129.078925], [35.231625, 129.078034], [35.231954, 129.077474], [35.23202, 129.077268], [35.232023, 129.07657], [35.232024, 129.076222], [35.231991, 129.075876], [35.231877, 129.075799], [35.231992, 129.075414], [35.231776, 129.075319], [35.231624, 129.075022], [35.232031, 129.074773], [35.232719, 129.074311], [35.23332, 129.074129], [35.233953, 129.074255], [35.234082, 129.074046], [35.234483, 129.073852], [35.235413, 129.073986], [35.235804, 129.07433], [35.235978, 129.07492], [35.235842, 129.075813], [35.235946, 129.07596], [35.236531, 129.075857], [35.236611, 129.076708], [35.237499, 129.076588], [35.237742, 129.076885], [35.238404, 129.076675], [35.238536, 129.077126], [35.238459, 129.07785], [35.237829, 129.078249], [35.237535, 129.079004]];
+  const OLD_BOUNDS = {n:35.2385,s:35.2299,w:129.0738,e:129.0847}; // 예전 그림 지도(%) 좌표 변환용
+  const OSM_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+  const OSM_ATTR = '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> 기여자';
+  const KID_HTML = `<div class="kid-avatar" aria-hidden="true"><div class="kid-bubble">도착! ✨</div><div class="kid-body"><svg viewBox="0 0 60 84" width="48" height="67">                 <ellipse cx="30" cy="80" rx="16" ry="4" fill="#2e3b30" opacity=".22"/>                 <rect class="leg-l" x="21" y="56" width="8" height="20" rx="4" fill="#3b4a6b"/>                 <rect class="leg-r" x="31" y="56" width="8" height="20" rx="4" fill="#3b4a6b"/>                 <ellipse cx="25" cy="77" rx="6" ry="3.5" fill="#e0533d"/><ellipse cx="35" cy="77" rx="6" ry="3.5" fill="#e0533d"/>                 <rect class="arm-l" x="9" y="38" width="8" height="18" rx="4" fill="#ffd9b8"/>                 <rect class="arm-r" x="43" y="38" width="8" height="18" rx="4" fill="#ffd9b8"/>                 <path d="M15 40 Q30 30 45 40 L48 62 Q30 66 12 62Z" fill="#ffcf3f" stroke="#e5b22a" stroke-width="1.5"/>                 <path d="M30 47 c-2.5 -3.5 -7.5 -1.5 -5.5 2 l5.5 5.5 l5.5 -5.5 c2 -3.5 -3 -5.5 -5.5 -2z" fill="#e85a6b"/>                 <circle cx="30" cy="24" r="14" fill="#ffdcbf"/>                 <path d="M16.5 23 Q17 9 30 9 Q43 9 43.5 23 Q38 16 30 17 Q22 16 16.5 23Z" fill="#4a3226"/>                 <path d="M13 17 Q30 -2 47 17 Z" fill="#ffcf3f" stroke="#e5b22a" stroke-width="1.5"/>                 <ellipse cx="30" cy="17" rx="20" ry="3.2" fill="#ffd95c" stroke="#e5b22a" stroke-width="1.2"/>                 <circle cx="25" cy="25" r="1.9" fill="#2b2b2b"/><circle cx="35" cy="25" r="1.9" fill="#2b2b2b"/>                 <circle cx="21.5" cy="29.5" r="2.6" fill="#ff9ea3" opacity=".7"/><circle cx="38.5" cy="29.5" r="2.6" fill="#ff9ea3" opacity=".7"/>                 <path d="M26.5 30.5 Q30 33.5 33.5 30.5" fill="none" stroke="#a5523e" stroke-width="1.6" stroke-linecap="round"/>               </svg></div></div>`;
+
   const demo = {
     places: [
-      {id:"neok", name:"넉넉한터", emoji:"🌳", x:33, y:34, votes:6, description:"넓게 열린 공간에서 바람과 몸의 움직임을 살펴봐요."},
-      {id:"miri", name:"미리내골", emoji:"💧", x:70, y:46, votes:4, description:"물길과 나무 사이에서 소리, 온도, 바람을 비교해봐요."},
-      {id:"sculpt", name:"조각공원", emoji:"🌀", x:28, y:69, votes:3, description:"조형물과 주변 자연의 모양을 관찰해요."},
-      {id:"library", name:"중앙도서관", emoji:"📚", x:56, y:62, votes:2, description:"건물 사이에서 바람이 어떻게 달라지는지 찾아봐요."}
+      {id:"neok", name:"넉넉한터", emoji:"🌳", lat:35.231846, lng:129.082836, area:AREA_NEOK, votes:6, description:"넓게 열린 공간에서 바람과 몸의 움직임을 살펴봐요."},
+      {id:"miri", name:"미리내골", emoji:"💧", lat:35.233314, lng:129.080287, area:AREA_MIRI, votes:4, description:"물길과 나무 사이에서 소리, 온도, 바람을 비교해봐요."},
+      {id:"sculpt", name:"조각공원", emoji:"🌀", lat:35.2328, lng:129.0765, radius:35, approx:true, votes:3, description:"조형물과 주변 자연의 모양을 관찰해요."},
+      {id:"library", name:"중앙도서관", emoji:"📚", lat:35.234336, lng:129.078551, area:AREA_LIB, votes:2, description:"건물 사이에서 바람이 어떻게 달라지는지 찾아봐요."}
     ],
     records: [
       {id:"r1", placeId:"neok", date:"2026-11-08", mark:"⭐", photo:"", quote:"여기서는 나뭇잎이 계속 춤추는 것 같아요!", discovery:"열린 공간이라 다른 곳보다 바람을 더 잘 느낄 수 있다는 의견이 나왔어요.", windDirection:"NE", windStrength:3, weather:"partly", temperature:13, feeling:"cool"},
@@ -655,9 +584,12 @@
   let selectedPlaceId = state.places[0]?.id || null;
   let teacherUnlocked = false;
   let pendingPhoto = "";
-  let newX = 50, newY = 50;
+  let map = null, layers = {}, baseLayers = {}, satellite = false;
+  let kidMarker = null, kidLatLng = null, kidAnim = 0;
+  let newMap = null, newMarker = null, newLatLng = null;
+  let editMap = null, editLayer = null;
   let voteLock = false;
-  let kidPos = null, kidTimer = null;
+  let kidTimer = null;
 
   function cloneDemo(){ return JSON.parse(JSON.stringify(demo)); }
   function load(){
@@ -666,8 +598,23 @@
       if(!raw) return cloneDemo();
       const parsed = JSON.parse(raw);
       if(!Array.isArray(parsed.places) || !Array.isArray(parsed.records)) return cloneDemo();
-      return parsed;
+      return migrate(parsed);
     }catch(e){ return cloneDemo(); }
+  }
+  function migrate(data){
+    data.places.forEach(p=>{
+      if(typeof p.lat==="number" && typeof p.lng==="number") return;
+      const d=demo.places.find(x=>x.id===p.id);
+      if(d){ Object.assign(p,{lat:d.lat,lng:d.lng,area:d.area,radius:d.radius,approx:d.approx}); }
+      else{
+        const x=Number(p.x)||50, y=Number(p.y)||50;
+        p.lat=+(OLD_BOUNDS.n-(y/100)*(OLD_BOUNDS.n-OLD_BOUNDS.s)).toFixed(6);
+        p.lng=+(OLD_BOUNDS.w+(x/100)*(OLD_BOUNDS.e-OLD_BOUNDS.w)).toFixed(6);
+        p.radius=30; p.approx=true;
+      }
+      delete p.x; delete p.y;
+    });
+    return data;
   }
   function save(){
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -709,75 +656,129 @@
       toast(`${p.name}에 한 표! 🌟`); speak(`${p.name}에 한 표!`);
     });
   }
+  const divIcon = html => L.divIcon({className:"lf-icon",html,iconSize:[0,0],iconAnchor:[0,0]});
+  function areaStyle(p,sel){
+    return {color:sel?"#e9a11a":"#2f7d57",weight:sel?4:2,fillColor:sel?"#ffd96b":"#7fba78",fillOpacity:sel?.4:.22,dashArray:p.approx?"6 6":null};
+  }
+  function areaShape(p,style){
+    return Array.isArray(p.area)&&p.area.length>2 ? L.polygon(p.area,style) : L.circle([p.lat,p.lng],{...style,radius:Number(p.radius)||30});
+  }
+  function initMap(){
+    if(!window.L){ $("#mapOffline").hidden=false; return; }
+    map=L.map("leafletMap",{scrollWheelZoom:false,minZoom:15,maxZoom:19,maxBounds:L.latLngBounds(CAMPUS).pad(.8)});
+    baseLayers.map=L.tileLayer(OSM_URL,{maxZoom:19,attribution:OSM_ATTR}).addTo(map);
+    baseLayers.sat=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:19,attribution:"위성 사진 © Esri"});
+    L.polygon(CAMPUS,{color:"#2f7d57",weight:3,dashArray:"8 8",fill:false,interactive:false}).addTo(map);
+    layers.areas=L.layerGroup().addTo(map); layers.pins=L.layerGroup().addTo(map);
+    layers.wind=L.layerGroup(); layers.weather=L.layerGroup();
+    fitPlaces();
+  }
+  function fitPlaces(){
+    if(!map) return;
+    const pts=state.places.map(p=>[p.lat,p.lng]);
+    const b=pts.length?L.latLngBounds(pts):L.latLngBounds(CAMPUS);
+    map.fitBounds(b,{paddingTopLeft:[70,120],paddingBottomRight:[70,110],maxZoom:18});
+  }
+  function selectPlace(id){
+    selectedPlaceId=id; renderMap(); renderSelected();
+    const p=placeById(id); if(p) speak(`${p.name}. ${kidSentence(latestFor(p.id))}`);
+  }
   function renderMap(){
-    $("#mapPins").innerHTML=state.places.map(p=>`
-      <button class="map-pin ${p.id===selectedPlaceId?"selected":""}" style="left:${p.x}%;top:${p.y}%;" data-place="${esc(p.id)}" aria-label="${esc(p.name)}">
-        <div class="pin-bubble"><span>${esc(p.emoji||"📍")}</span></div>
-        <div class="pin-label">${esc(p.name)}</div>
-      </button>`).join("");
-    $$("[data-place]",$("#mapPins")).forEach(btn=>btn.onclick=()=>{ selectedPlaceId=btn.dataset.place; renderMap(); renderSelected(); const p=placeById(selectedPlaceId); if(p) speak(`${p.name}. ${kidSentence(latestFor(p.id))}`); });
-
-    const winds=[];
+    if(!map) return;
+    Object.values(layers).forEach(l=>l.clearLayers());
     state.places.forEach(p=>{
+      const sel=p.id===selectedPlaceId;
+      const shape=areaShape(p,areaStyle(p,sel)); shape.on("click",()=>selectPlace(p.id)); layers.areas.addLayer(shape);
+      const pin=L.marker([p.lat,p.lng],{icon:divIcon(`<div class="map-pin ${sel?"selected":""}" role="button" aria-label="${esc(p.name)}">
+        <div class="pin-bubble"><span>${esc(p.emoji||"📍")}</span></div>
+        <div class="pin-label">${esc(p.name)}</div></div>`),zIndexOffset:sel?500:0});
+      pin.on("click",()=>selectPlace(p.id)); layers.pins.addLayer(pin);
+
       const r=latestFor(p.id); if(!r) return;
       const strength=Math.max(1,Math.min(3,Number(r.windStrength)||1));
-      winds.push(`<div class="wind-marker" style="left:${Math.min(94,p.x+5)}%;top:${Math.max(8,p.y-7)}%;">
+      layers.wind.addLayer(L.marker([p.lat,p.lng],{interactive:false,keyboard:false,icon:divIcon(`<div class="wind-marker" style="left:64px;top:-74px">
         <span class="wind-arrow" style="transform:rotate(${dirDeg[r.windDirection]||0}deg);font-size:${24+strength*7}px">➤</span>
-        <div class="wind-tag">${"💨".repeat(strength)}</div>
-      </div>`);
-    });
-    $("#windLayer").innerHTML=winds.join("");
-    moveKid();
-    $("#windLayer").style.display=$("#windToggle").checked?"block":"none";
-
-    const weathers=[];
-    state.places.forEach(p=>{
-      const r=latestFor(p.id); if(!r || (!WEATHER[r.weather] && !hasTemp(r))) return;
+        <div class="wind-tag">${"💨".repeat(strength)}</div></div>`)}));
       const w=WEATHER[r.weather];
-      weathers.push(`<div class="weather-marker" style="left:${Math.max(6,p.x-6)}%;top:${Math.max(8,p.y-7)}%;">
-        ${w?`<span class="w-icon">${w.icon}</span>`:""}${hasTemp(r)?`<span class="w-temp">${Number(r.temperature)}°C</span>`:""}
-      </div>`);
+      if(w||hasTemp(r)) layers.weather.addLayer(L.marker([p.lat,p.lng],{interactive:false,keyboard:false,icon:divIcon(`<div class="weather-marker" style="left:-70px;top:-66px">
+        ${w?`<span class="w-icon">${w.icon}</span>`:""}${hasTemp(r)?`<span class="w-temp">${Number(r.temperature)}°C</span>`:""}</div>`)}));
     });
-    $("#weatherLayer").innerHTML=weathers.join("");
-    $("#weatherLayer").style.display=$("#weatherToggle").checked?"block":"none";
+    $("#windToggle").checked?layers.wind.addTo(map):layers.wind.remove();
+    $("#weatherToggle").checked?layers.weather.addTo(map):layers.weather.remove();
+    moveKid();
   }
   function moveKid(){
-    const kid=$("#kidAvatar"), p=placeById(selectedPlaceId);
-    if(!p){ kid.hidden=true; return; }
-    kid.hidden=false;
-    const tx=Math.max(4,Math.min(96,Number(p.x))), ty=Math.min(99,Number(p.y)+14);
-    if(kidPos && kidPos.x===tx && kidPos.y===ty) return;
-    if(!kidPos){
-      kid.classList.add("no-anim"); kid.style.left=tx+"%"; kid.style.top=ty+"%";
-      kid.offsetWidth; kid.classList.remove("no-anim"); kidPos={x:tx,y:ty}; return;
+    if(!map) return;
+    const p=placeById(selectedPlaceId);
+    if(!p){ if(kidMarker){ kidMarker.remove(); kidMarker=null; kidLatLng=null; } return; }
+    const target=L.latLng(p.lat,p.lng);
+    if(!kidMarker){
+      kidMarker=L.marker(target,{icon:divIcon(KID_HTML),interactive:false,keyboard:false,zIndexOffset:1000}).addTo(map);
+      kidLatLng=target; return;
     }
-    const dist=Math.hypot(tx-kidPos.x,ty-kidPos.y);
-    const dur=Math.min(2.4,.6+dist*.035);
-    kid.classList.toggle("flip", tx<kidPos.x);
-    kid.style.transitionDuration=dur+"s";
-    kid.classList.add("walking"); $("#kidBubble").classList.remove("show");
-    kid.style.left=tx+"%"; kid.style.top=ty+"%"; kidPos={x:tx,y:ty};
-    clearTimeout(kidTimer);
-    kidTimer=setTimeout(()=>{
-      kid.classList.remove("walking"); $("#kidBubble").classList.add("show");
-      kidTimer=setTimeout(()=>$("#kidBubble").classList.remove("show"),1600);
-    },dur*1000);
+    if(kidLatLng.equals(target)) return;
+    const el=kidMarker.getElement().querySelector(".kid-avatar"), bubble=el.querySelector(".kid-bubble");
+    const from=kidLatLng;
+    const px=map.latLngToLayerPoint(from).distanceTo(map.latLngToLayerPoint(target));
+    const dur=Math.min(3200,Math.max(700,px*8));
+    const reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.classList.toggle("flip", target.lng<from.lng);
+    el.classList.add("walking"); bubble.classList.remove("show");
+    cancelAnimationFrame(kidAnim); clearTimeout(kidTimer);
+    if(!map.getBounds().pad(-.1).contains(target)) map.panTo(target);
+    const t0=performance.now();
+    const step=now=>{
+      const t=reduce?1:Math.min(1,(now-t0)/dur), e=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+      kidLatLng=L.latLng(from.lat+(target.lat-from.lat)*e, from.lng+(target.lng-from.lng)*e);
+      kidMarker.setLatLng(kidLatLng);
+      if(t<1){ kidAnim=requestAnimationFrame(step); return; }
+      kidLatLng=target; el.classList.remove("walking"); bubble.classList.add("show");
+      kidTimer=setTimeout(()=>bubble.classList.remove("show"),1600);
+    };
+    kidAnim=requestAnimationFrame(step);
   }
-  function buildMapArt(){
-    const trees=[];
-    for(let i=0;i<22;i++) trees.push([i*48+(i%3)*9, 28+(i*37%34), 22+(i*13%12), true]);
-    [[70,150,28],[150,118,22],[212,98,20],[80,232,18],[540,82,22],[905,118,28],[948,250,30],[925,180,20],[730,215,20],
-     [72,420,28],[150,410,18],[200,540,30],[268,575,22],[40,560,24],[360,520,24],[520,520,22],[560,575,26],[745,520,28],
-     [790,470,18],[960,410,24],[880,430,20],[420,215,16],[470,215,14],[700,60,18],[600,200,18],[380,320,16],[150,250,14],[720,560,22]]
-      .forEach(t=>trees.push(t));
-    $("#treeLayer").innerHTML=trees.map(([x,y,r,dark])=>
-      `<ellipse cx="${x+r*.35}" cy="${y+r*.55}" rx="${r}" ry="${r*.75}" fill="#3c5a2c" opacity=".2"/>`+
-      `<circle cx="${x}" cy="${y}" r="${r}" fill="url(#${dark?"gTreeDark":"gTree"})"/>`+
-      `<circle cx="${x-r*.3}" cy="${y-r*.32}" r="${r*.32}" fill="#bfe39a" opacity=".35"/>`).join("");
-    // 교사용 위치 지정판에도 같은 지도를 사용 (id 충돌 방지를 위해 접미사 부여)
-    const html=$("#childMap .map-art").outerHTML
-      .replace(/id="([^"]+)"/g,'id="$1-b"').replace(/url\(#([^)]+)\)/g,'url(#$1-b)');
-    $("#positionBoard").insertAdjacentHTML("afterbegin",html);
+  function miniMap(el){
+    const m=L.map(el,{scrollWheelZoom:false,minZoom:15,maxZoom:19});
+    L.tileLayer(OSM_URL,{maxZoom:19,attribution:OSM_ATTR}).addTo(m);
+    L.polygon(CAMPUS,{color:"#2f7d57",weight:2,dashArray:"6 6",fill:false,interactive:false}).addTo(m);
+    m.fitBounds(L.latLngBounds(CAMPUS));
+    return m;
+  }
+  const dotIcon = () => divIcon('<div class="position-dot"></div>');
+  function showNewMap(){
+    if(!window.L) return;
+    if(!newMap){
+      newMap=miniMap($("#positionBoard"));
+      newMap.on("click",e=>{
+        newLatLng=e.latlng;
+        if(!newMarker){
+          newMarker=L.marker(e.latlng,{icon:dotIcon(),draggable:true}).addTo(newMap);
+          newMarker.on("dragend",()=>{ newLatLng=newMarker.getLatLng(); labelNewPos(); });
+        }else newMarker.setLatLng(e.latlng);
+        labelNewPos();
+      });
+    }
+    setTimeout(()=>newMap.invalidateSize(),0);
+  }
+  function labelNewPos(){
+    $("#newPosLabel").textContent=newLatLng?`선택한 위치: ${newLatLng.lat.toFixed(5)}, ${newLatLng.lng.toFixed(5)} (점을 끌어서 옮길 수 있어요)`:"지도를 눌러 새 장소의 위치를 정해 주세요.";
+  }
+  function showEditMap(recenter=true){
+    if(!window.L || !teacherUnlocked) return;
+    if(!editMap){ editMap=miniMap($("#editBoard")); editLayer=L.layerGroup().addTo(editMap); }
+    setTimeout(()=>editMap.invalidateSize(),0);
+    editLayer.clearLayers();
+    const p=placeById($("#editPlaceSelect").value); if(!p) return;
+    editLayer.addLayer(areaShape(p,areaStyle(p,true)));
+    const mk=L.marker([p.lat,p.lng],{icon:divIcon(`<div class="map-pin selected"><div class="pin-bubble"><span>${esc(p.emoji||"📍")}</span></div></div>`),draggable:true});
+    mk.on("dragend",()=>{
+      const ll=mk.getLatLng(), dLat=ll.lat-p.lat, dLng=ll.lng-p.lng;
+      p.lat=+ll.lat.toFixed(6); p.lng=+ll.lng.toFixed(6);
+      if(Array.isArray(p.area)) p.area=p.area.map(([a,b])=>[+(a+dLat).toFixed(6),+(b+dLng).toFixed(6)]);
+      p.approx=false; save(); showEditMap(false); toast(`${p.name} 위치를 저장했어요.`);
+    });
+    editLayer.addLayer(mk);
+    if(recenter) editMap.setView([p.lat,p.lng],17);
   }
   function renderSelected(){
     let p=placeById(selectedPlaceId) || state.places[0];
@@ -817,11 +818,14 @@
     const filter=$("#recordFilter"), fcur=filter.value;
     filter.innerHTML=`<option value="all">전체 장소</option>`+state.places.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join("");
     if([...filter.options].some(o=>o.value===fcur)) filter.value=fcur;
+    const ed=$("#editPlaceSelect"), ecur=ed.value;
+    ed.innerHTML=state.places.map(p=>`<option value="${esc(p.id)}">${esc(p.emoji||"📍")} ${esc(p.name)}${p.approx?" (임시 위치)":""}</option>`).join("");
+    if([...ed.options].some(o=>o.value===ecur)) ed.value=ecur;
   }
   function renderAdmin(){
     $("#placeAdmin").innerHTML=state.places.map(p=>`
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #ece8db">
-        <div><b>${esc(p.emoji||"📍")} ${esc(p.name)}</b><div class="tiny">위치 ${p.x}% · ${p.y}% / ${p.votes||0}표</div></div>
+        <div><b>${esc(p.emoji||"📍")} ${esc(p.name)}</b><div class="tiny">위치 ${Number(p.lat).toFixed(5)}, ${Number(p.lng).toFixed(5)}${p.approx?" · 임시 위치":""} / ${p.votes||0}표</div></div>
         <button class="icon-btn" data-delete-place="${esc(p.id)}" title="장소 삭제">🗑️</button>
       </div>`).join("");
     $$("[data-delete-place]").forEach(btn=>btn.onclick=()=>{
@@ -881,6 +885,8 @@
     $(`#view-${view}`).classList.add("active");
     $(`.tab[data-view="${view}"]`)?.classList.add("active");
     document.body.classList.toggle("child-mode", view==="child");
+    if(view==="child" && map) setTimeout(()=>map.invalidateSize(),0);
+    if(view==="teacher") showEditMap();
     if(view==="teacher" && teacherUnlocked) $("#teacherPin").value="";
     if(view==="records") renderRecords();
     window.scrollTo({top:0,behavior:"smooth"});
@@ -890,13 +896,20 @@
   $$("[data-go]").forEach(b=>b.onclick=()=>go(b.dataset.go));
   $("#windToggle").onchange=renderMap;
   $("#weatherToggle").onchange=renderMap;
+  $("#mapModeBtn").onclick=()=>{
+    if(!map) return;
+    satellite=!satellite;
+    if(satellite){ baseLayers.map.remove(); baseLayers.sat.addTo(map); }
+    else{ baseLayers.sat.remove(); baseLayers.map.addTo(map); }
+    $("#mapModeBtn").textContent=satellite?"🗺️ 지도로 보기":"🛰️ 하늘에서 보기";
+  };
   $("#soundToggle").onchange=()=>{ if(!$("#soundToggle").checked) try{ speechSynthesis.cancel(); }catch(e){} };
   $("#recordFilter").onchange=renderRecords;
   $("#previewChildBtn").onclick=()=>go("child");
 
   $("#unlockBtn").onclick=()=>{
     if($("#teacherPin").value===TEACHER_PIN){
-      teacherUnlocked=true; $("#teacherGate").hidden=true; $("#teacherWorkspace").hidden=false; toast("교사 모드가 열렸어요.");
+      teacherUnlocked=true; $("#teacherGate").hidden=true; $("#teacherWorkspace").hidden=false; toast("교사 모드가 열렸어요."); showEditMap();
     }else toast("PIN이 달라요. 기본 PIN은 1234입니다.");
   };
   $("#teacherPin").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#unlockBtn").click(); });
@@ -904,14 +917,9 @@
   $("#placeSelect").onchange=()=>{
     const isNew=$("#placeSelect").value==="__new__";
     ["newPlaceNameField","newPlaceEmojiField","newPlacePositionField"].forEach(id=>$("#"+id).hidden=!isNew);
+    if(isNew) showNewMap();
   };
-  $("#positionBoard").onclick=(e)=>{
-    const rect=e.currentTarget.getBoundingClientRect();
-    newX=Math.max(5,Math.min(95,Math.round((e.clientX-rect.left)/rect.width*100)));
-    newY=Math.max(8,Math.min(92,Math.round((e.clientY-rect.top)/rect.height*100)));
-    $("#positionDot").style.left=newX+"%"; $("#positionDot").style.top=newY+"%";
-    $("#xLabel").textContent=`X ${newX}%`; $("#yLabel").textContent=`Y ${newY}%`;
-  };
+  $("#editPlaceSelect").onchange=()=>showEditMap();
 
   $("#photoInput").onchange=async(e)=>{
     const file=e.target.files?.[0]; if(!file){ pendingPhoto=""; return; }
@@ -945,8 +953,9 @@
     if(placeId==="__new__"){
       const name=$("#newPlaceName").value.trim();
       if(!name){ toast("새 장소 이름을 적어주세요."); return; }
+      if(!newLatLng){ toast("지도를 눌러 새 장소 위치를 정해 주세요."); return; }
       placeId=uid("place");
-      state.places.push({id:placeId,name,emoji:$("#newPlaceEmoji").value.trim()||"🌿",x:newX,y:newY,votes:0,description:"아이들이 새롭게 발견해 지도에 추가한 장소예요."});
+      state.places.push({id:placeId,name,emoji:$("#newPlaceEmoji").value.trim()||"🌿",lat:+newLatLng.lat.toFixed(6),lng:+newLatLng.lng.toFixed(6),radius:30,votes:0,description:"아이들이 새롭게 발견해 지도에 추가한 장소예요."});
     }
     const record={
       id:uid("record"), placeId,
@@ -971,6 +980,7 @@
     e.target.reset(); $("#walkDate").value=new Date().toISOString().slice(0,10); $("#childMark").value="⭐"; $("#newPlaceEmoji").value="🌿";
     pendingPhoto=""; $("#photoPreview").style.display="none"; $("#photoPreview").src="";
     ["newPlaceNameField","newPlaceEmojiField","newPlacePositionField"].forEach(id=>$("#"+id).hidden=true);
+    newLatLng=null; if(newMarker){ newMarker.remove(); newMarker=null; } labelNewPos();
     toast("지도에 새 기록을 저장했어요! 🍃");
   };
 
@@ -985,7 +995,7 @@
     try{
       const parsed=JSON.parse(await file.text());
       if(!Array.isArray(parsed.places)||!Array.isArray(parsed.records)) throw new Error();
-      state=parsed; selectedPlaceId=state.places[0]?.id||null; save(); toast("기록을 불러왔어요.");
+      state=migrate(parsed); selectedPlaceId=state.places[0]?.id||null; save(); fitPlaces(); toast("기록을 불러왔어요.");
     }catch(err){ toast("올바른 기록 파일이 아니에요."); }
     e.target.value="";
   };
@@ -1010,7 +1020,7 @@
   };
 
   $("#walkDate").value=new Date().toISOString().slice(0,10);
-  buildMapArt();
+  initMap();
   renderAll();
 })();
 </script>
