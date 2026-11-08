@@ -316,7 +316,7 @@
       </aside>
     </div>
     <div class="footer-note">
-      지도: © OpenStreetMap 기여자 · 위성 사진: Esri. 넉넉한터·미리내골(미리내 생태보호구역)·중앙도서관(제1도서관)의 위치와 영역은 OpenStreetMap 자료를 사용했습니다. 조각공원은 지도 자료에 없어 예술관 주변에 <b>임시 위치</b>로 두었으니 교사 모드에서 실제 위치로 옮겨 주세요.
+      지도: © OpenStreetMap 기여자 · 위성 사진: Esri. 넉넉한터·미리내골(미리내 생태보호구역)·중앙도서관(제1도서관)의 위치와 영역은 OpenStreetMap 자료를 사용했습니다. 조각공원은 지도 자료에 없어 미리내골 옆에 <b>대략적인 위치</b>(점선)로 표시했으니, 정확한 자리는 교사 모드에서 핀을 끌어 맞춰 주세요.
     </div>
   </section>
 
@@ -552,7 +552,7 @@
     places: [
       {id:"neok", name:"넉넉한터", emoji:"🌳", lat:35.231846, lng:129.082836, area:AREA_NEOK, votes:6, description:"넓게 열린 공간에서 바람과 몸의 움직임을 살펴봐요."},
       {id:"miri", name:"미리내골", emoji:"💧", lat:35.233314, lng:129.080287, area:AREA_MIRI, votes:4, description:"물길과 나무 사이에서 소리, 온도, 바람을 비교해봐요."},
-      {id:"sculpt", name:"조각공원", emoji:"🌀", lat:35.2328, lng:129.0765, radius:35, approx:true, votes:3, description:"조형물과 주변 자연의 모양을 관찰해요."},
+      {id:"sculpt", name:"조각공원", emoji:"🌀", lat:35.23335, lng:129.08155, radius:35, approx:true, votes:3, description:"조형물과 주변 자연의 모양을 관찰해요."},
       {id:"library", name:"중앙도서관", emoji:"📚", lat:35.234336, lng:129.078551, area:AREA_LIB, votes:2, description:"건물 사이에서 바람이 어떻게 달라지는지 찾아봐요."}
     ],
     records: [
@@ -585,6 +585,8 @@
   }
   function migrate(data){
     data.places.forEach(p=>{
+      // 예전 임시 위치(예술관 주변)에 남아 있는 조각공원은 미리내골 옆으로 옮김
+      if(p.id==="sculpt" && p.lat===35.2328 && p.lng===129.0765){ const d=demo.places.find(x=>x.id==="sculpt"); p.lat=d.lat; p.lng=d.lng; }
       if(typeof p.lat==="number" && typeof p.lng==="number") return;
       const d=demo.places.find(x=>x.id===p.id);
       if(d){ Object.assign(p,{lat:d.lat,lng:d.lng,area:d.area,radius:d.radius,approx:d.approx}); }
