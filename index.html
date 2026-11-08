@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#f6f3e8">
-<title>바람따라 부산대 | 유아 산책 기록 지도</title>
+<title>사랑반 산책 지도 | 유아 산책 기록 지도</title>
 <style>
   :root{
     --paper:#f7f4e9;
@@ -107,6 +107,9 @@
   .wind-marker{position:absolute;transform:translate(-50%,-50%);z-index:6;pointer-events:none}
   .wind-arrow{display:block;font-size:30px;filter:drop-shadow(0 4px 4px rgba(0,0,0,.16));transform-origin:center}
   .wind-tag{font-size:10px;background:#fff;padding:3px 7px;border-radius:10px;font-weight:900;white-space:nowrap;box-shadow:0 3px 8px rgba(0,0,0,.1)}
+  .weather-marker{position:absolute;transform:translate(-50%,-50%);z-index:7;pointer-events:none;display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.95);padding:4px 8px 4px 5px;border-radius:999px;box-shadow:0 4px 10px rgba(0,0,0,.14);white-space:nowrap}
+  .weather-marker .w-icon{font-size:20px;line-height:1}
+  .weather-marker .w-temp{font-size:11px;font-weight:900;color:#c4572d}
   .legend{position:absolute;left:14px;bottom:14px;z-index:12;background:rgba(255,255,255,.9);padding:9px 10px;border-radius:14px;font-size:10px;font-weight:800;box-shadow:0 6px 16px rgba(0,0,0,.12)}
   .map-note{position:absolute;right:14px;bottom:14px;z-index:12;background:rgba(37,52,45,.85);color:#fff;padding:8px 10px;border-radius:12px;font-size:10px}
   .selected-place{padding:16px}
@@ -197,8 +200,8 @@
   <div class="brand">
     <div class="brand-badge">🍃</div>
     <div>
-      <h1>바람따라 부산대</h1>
-      <small>유아와 함께 만드는 산책·바람 기록 지도</small>
+      <h1>사랑반 산책 지도</h1>
+      <small>유아와 함께 만드는 산책·바람·날씨 기록 지도</small>
     </div>
   </div>
   <nav class="tabs" aria-label="화면 선택">
@@ -216,7 +219,6 @@
   <div class="hero-card">
     <span class="eyebrow">🌱 부산대학교 부산캠퍼스 · 발표용 프로토타입</span>
     <h2>아이들이 고르고, 걷고, 발견한 것을<br>우리만의 지도로 남겨요.</h2>
-    <p>산책 장소 투표 → 현장 탐색 → 바람의 방향·세기 표현 → 아이의 말과 사진 기록 → 다시 방문하며 비교하는 흐름입니다.</p>
   </div>
   <div class="hero-side">
     <div class="metric"><span>우리 장소</span><strong id="metricPlaces">0</strong></div>
@@ -239,7 +241,7 @@
       <section class="panel map-panel">
         <div class="map-toolbar">
           <strong>🗺️ 우리가 만드는 부산대 탐험지도</strong>
-          <label class="switch"><input type="checkbox" id="windToggle" checked> 바람 표시</label>
+          <span style="display:flex;gap:12px;flex-wrap:wrap"><label class="switch"><input type="checkbox" id="windToggle" checked> 바람 표시</label><label class="switch"><input type="checkbox" id="weatherToggle" checked> 날씨 표시</label></span>
         </div>
         <div class="map-stage" id="childMap">
           <svg class="map-art" viewBox="0 0 1000 620" preserveAspectRatio="none" aria-hidden="true">
@@ -274,7 +276,8 @@
           </svg>
           <div id="mapPins"></div>
           <div id="windLayer"></div>
-          <div class="legend">💨 약한 바람 · 💨💨 보통 · 💨💨💨 강한 바람</div>
+          <div id="weatherLayer"></div>
+          <div class="legend">💨 약한 바람 · 💨💨 보통 · 💨💨💨 강한 바람<br>☀️ 맑음 · ⛅ 구름 조금 · ☁️ 흐림 · 🌧️ 비 · ❄️ 눈 · 🌡️ 기온</div>
           <div class="map-note">※ 발표용 개념 지도 · 실제 길찾기용 아님</div>
         </div>
       </section>
@@ -306,7 +309,7 @@
       <div class="teacher-layout">
         <section class="panel">
           <div class="panel-head">
-            <div><h3>새 산책 기록 남기기 ✍️</h3><p>사진, 아이의 말, 바람과 발견을 한 번에 기록합니다.</p></div>
+            <div><h3>새 산책 기록 남기기 ✍️</h3><p>사진, 아이의 말, 바람·날씨와 발견을 한 번에 기록합니다.</p></div>
           </div>
           <form class="form-wrap" id="recordForm">
             <div class="form-grid">
@@ -379,6 +382,30 @@
                   <option value="3">강함 · 아주 세요</option>
                 </select>
               </div>
+              <div class="field">
+                <label for="weather">날씨</label>
+                <select id="weather">
+                  <option value="sunny">☀️ 맑음</option>
+                  <option value="partly">⛅ 구름 조금</option>
+                  <option value="cloudy">☁️ 흐림</option>
+                  <option value="rain">🌧️ 비</option>
+                  <option value="snow">❄️ 눈</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="temperature">기온 (°C)</label>
+                <input id="temperature" type="number" step="0.5" min="-30" max="45" placeholder="예: 14">
+              </div>
+              <div class="field full">
+                <label for="feeling">아이들이 느낀 온도</label>
+                <select id="feeling">
+                  <option value="">선택 안 함</option>
+                  <option value="cold">🥶 추워요</option>
+                  <option value="cool">😊 시원해요</option>
+                  <option value="warm">🙂 따뜻해요</option>
+                  <option value="hot">🥵 더워요</option>
+                </select>
+              </div>
             </div>
             <div class="teacher-actions">
               <button class="primary" type="submit">💾 지도에 기록 저장</button>
@@ -442,6 +469,23 @@
   const $$ = (s, r=document) => [...r.querySelectorAll(s)];
   const esc = (v="") => String(v).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]));
   const dirDeg = {N:0,NE:45,E:90,SE:135,S:180,SW:225,W:270,NW:315};
+  const WEATHER = {sunny:{icon:"☀️",label:"맑음"},partly:{icon:"⛅",label:"구름 조금"},cloudy:{icon:"☁️",label:"흐림"},rain:{icon:"🌧️",label:"비"},snow:{icon:"❄️",label:"눈"}};
+  const FEELING = {cold:"🥶 추워요",cool:"😊 시원해요",warm:"🙂 따뜻해요",hot:"🥵 더워요"};
+  const hasTemp = r => r && r.temperature!==null && r.temperature!==undefined && r.temperature!=="" && !isNaN(Number(r.temperature));
+  function weatherChips(r){
+    if(!r) return "";
+    const w=WEATHER[r.weather], out=[];
+    if(w) out.push(`<span class="chip">${w.icon} ${w.label}</span>`);
+    if(hasTemp(r)) out.push(`<span class="chip">🌡️ ${Number(r.temperature)}°C</span>`);
+    if(FEELING[r.feeling]) out.push(`<span class="chip">${FEELING[r.feeling]}</span>`);
+    return out.join("");
+  }
+  function weatherShort(r){
+    const parts=[];
+    if(WEATHER[r?.weather]) parts.push(WEATHER[r.weather].icon);
+    if(hasTemp(r)) parts.push(`${Number(r.temperature)}°C`);
+    return parts.join(" ");
+  }
 
   const demo = {
     places: [
@@ -451,9 +495,9 @@
       {id:"library", name:"중앙도서관", emoji:"📚", x:56, y:62, votes:2, description:"건물 사이에서 바람이 어떻게 달라지는지 찾아봐요."}
     ],
     records: [
-      {id:"r1", placeId:"neok", date:"2026-11-08", mark:"⭐", photo:"", quote:"여기서는 나뭇잎이 계속 춤추는 것 같아요!", discovery:"열린 공간이라 다른 곳보다 바람을 더 잘 느낄 수 있다는 의견이 나왔어요.", windDirection:"NE", windStrength:3},
-      {id:"r2", placeId:"miri", date:"2026-11-06", mark:"💧", photo:"", quote:"물 옆은 조금 더 시원해요.", discovery:"아이들이 물 가까이와 길 안쪽의 느낌을 비교하기 시작했어요.", windDirection:"E", windStrength:1},
-      {id:"r3", placeId:"sculpt", date:"2026-11-02", mark:"🌀", photo:"", quote:"동그란 조각 옆에서 바람이 빙글 도는 것 같아요.", discovery:"보이는 형태를 바람의 움직임과 연결해 표현했어요.", windDirection:"NW", windStrength:2}
+      {id:"r1", placeId:"neok", date:"2026-11-08", mark:"⭐", photo:"", quote:"여기서는 나뭇잎이 계속 춤추는 것 같아요!", discovery:"열린 공간이라 다른 곳보다 바람을 더 잘 느낄 수 있다는 의견이 나왔어요.", windDirection:"NE", windStrength:3, weather:"partly", temperature:13, feeling:"cool"},
+      {id:"r2", placeId:"miri", date:"2026-11-06", mark:"💧", photo:"", quote:"물 옆은 조금 더 시원해요.", discovery:"아이들이 물 가까이와 길 안쪽의 느낌을 비교하기 시작했어요.", windDirection:"E", windStrength:1, weather:"sunny", temperature:16, feeling:"cool"},
+      {id:"r3", placeId:"sculpt", date:"2026-11-02", mark:"🌀", photo:"", quote:"동그란 조각 옆에서 바람이 빙글 도는 것 같아요.", discovery:"보이는 형태를 바람의 움직임과 연결해 표현했어요.", windDirection:"NW", windStrength:2, weather:"rain", temperature:11, feeling:"cold"}
     ]
   };
 
@@ -525,6 +569,17 @@
     });
     $("#windLayer").innerHTML=winds.join("");
     $("#windLayer").style.display=$("#windToggle").checked?"block":"none";
+
+    const weathers=[];
+    state.places.forEach(p=>{
+      const r=latestFor(p.id); if(!r || (!WEATHER[r.weather] && !hasTemp(r))) return;
+      const w=WEATHER[r.weather];
+      weathers.push(`<div class="weather-marker" style="left:${Math.max(6,p.x-6)}%;top:${Math.max(8,p.y-7)}%;">
+        ${w?`<span class="w-icon">${w.icon}</span>`:""}${hasTemp(r)?`<span class="w-temp">${Number(r.temperature)}°C</span>`:""}
+      </div>`);
+    });
+    $("#weatherLayer").innerHTML=weathers.join("");
+    $("#weatherLayer").style.display=$("#weatherToggle").checked?"block":"none";
   }
   function renderSelected(){
     let p=placeById(selectedPlaceId) || state.places[0];
@@ -538,6 +593,7 @@
         <span class="chip">${esc(r?.mark||p.emoji||"📍")} 아이 마크</span>
         <span class="chip">🗳️ ${p.votes||0}표</span>
         <span class="chip">📚 ${recordsFor(p.id).length}개 기록</span>
+        ${weatherChips(r)}
       </div>
       <div class="place-title">${esc(p.name)}</div>
       <div class="place-desc">${esc(p.description||"아이들과 함께 발견을 쌓아가는 장소예요.")}</div>
@@ -589,7 +645,7 @@
           <p>${esc(r.discovery||"오늘의 발견을 기록해보세요.")}</p>
           ${r.quote?`<div class="record-quote">“${esc(r.quote)}”</div>`:""}
           <div class="record-actions">
-            <span class="record-date">${esc(r.date)} · ${"💨".repeat(Number(r.windStrength)||1)}</span>
+            <span class="record-date">${esc(r.date)} · ${"💨".repeat(Number(r.windStrength)||1)}${weatherShort(r)?" · "+weatherShort(r):""}</span>
             <div><button class="icon-btn" data-open="${esc(r.id)}">보기</button> <button class="icon-btn" data-delete="${esc(r.id)}">삭제</button></div>
           </div>
         </div>
@@ -608,7 +664,7 @@
     $("#modalTitle").textContent=`${p.emoji||"📍"} ${p.name} · ${r.date}`;
     $("#modalBody").innerHTML=`
       <div class="place-cover">${r.photo?`<img src="${r.photo}" alt="${esc(p.name)} 사진">`:`<div class="cover-emoji">${esc(r.mark||p.emoji||"🌿")}</div>`}</div>
-      <div class="place-meta"><span class="chip">${esc(r.mark||"🌿")} 아이 마크</span><span class="chip">바람 ${"💨".repeat(Number(r.windStrength)||1)}</span><span class="chip">방향 ${esc(r.windDirection||"-")}</span></div>
+      <div class="place-meta"><span class="chip">${esc(r.mark||"🌿")} 아이 마크</span><span class="chip">바람 ${"💨".repeat(Number(r.windStrength)||1)}</span><span class="chip">방향 ${esc(r.windDirection||"-")}</span>${weatherChips(r)}</div>
       ${r.quote?`<div class="quote">“${esc(r.quote)}”</div>`:""}
       <div class="discover" style="margin-top:14px"><b>오늘의 발견 / 교사 메모</b><br>${esc(r.discovery||"기록 없음")}</div>
     `;
@@ -630,6 +686,7 @@
   $$(".tab").forEach(t=>t.onclick=()=>go(t.dataset.view));
   $$("[data-go]").forEach(b=>b.onclick=()=>go(b.dataset.go));
   $("#windToggle").onchange=renderMap;
+  $("#weatherToggle").onchange=renderMap;
   $("#recordFilter").onchange=renderRecords;
   $("#previewChildBtn").onclick=()=>go("child");
 
@@ -695,7 +752,10 @@
       quote:$("#childQuote").value.trim(),
       discovery:$("#discovery").value.trim(),
       windDirection:$("#windDirection").value,
-      windStrength:Number($("#windStrength").value)
+      windStrength:Number($("#windStrength").value),
+      weather:$("#weather").value,
+      temperature:$("#temperature").value===""?null:Number($("#temperature").value),
+      feeling:$("#feeling").value
     };
     state.records.push(record); selectedPlaceId=placeId;
     try{ save(); }
@@ -713,7 +773,7 @@
   $("#exportBtn").onclick=()=>{
     const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
     const url=URL.createObjectURL(blob), a=document.createElement("a");
-    a.href=url; a.download=`부산대_유아산책지도_${new Date().toISOString().slice(0,10)}.json`; a.click();
+    a.href=url; a.download=`사랑반_산책지도_${new Date().toISOString().slice(0,10)}.json`; a.click();
     setTimeout(()=>URL.revokeObjectURL(url),500); toast("기록 파일을 내보냈어요.");
   };
   $("#importInput").onchange=async(e)=>{
