@@ -115,6 +115,8 @@
   #leafletMap{position:absolute;inset:0;z-index:0;background:#e8eadf}
   .lf-icon{background:none;border:0}
   .lf-icon .map-pin{left:0;top:0;cursor:pointer}
+  .map-pin.home .pin-bubble{border-color:#3b82c4;background:#eef7fc}
+  .map-pin.home .pin-label{background:#3b82c4;color:#fff}
   .map-offline{position:absolute;inset:0;z-index:5;display:grid;place-items:center;font-weight:900;color:var(--muted);background:#f1efe4}
   .map-offline[hidden]{display:none}
   .map-mode{position:absolute;top:12px;right:12px;z-index:500;border:0;background:#fff;border-radius:999px;padding:10px 14px;font-size:14px;font-weight:900;color:var(--ink);box-shadow:0 4px 12px rgba(0,0,0,.18)}
@@ -316,7 +318,7 @@
       </aside>
     </div>
     <div class="footer-note">
-      지도: © OpenStreetMap 기여자 · 위성 사진: Esri. 넉넉한터·미리내골(미리내 생태보호구역)·중앙도서관(제1도서관)의 위치와 영역은 OpenStreetMap 자료를 사용했습니다. 조각공원은 지도 자료에 없어 미리내골 옆에 <b>대략적인 위치</b>(점선)로 표시했으니, 정확한 자리는 교사 모드에서 핀을 끌어 맞춰 주세요.
+      지도: © OpenStreetMap 기여자 · 위성 사진: Esri. 넉넉한터·미리내골(미리내 생태보호구역)·중앙도서관(제1도서관)의 위치와 영역은 OpenStreetMap 자료를 사용했습니다. 조각공원은 지도 자료에 없어 선생님이 표시한 위치(생물관 옆 정원)로 정했고, 🏫 우리 유치원은 부산대학교 보육종합센터 건물입니다.
     </div>
   </section>
 
@@ -542,6 +544,8 @@
   const AREA_NEOK = [[35.232263, 129.082006], [35.232282, 129.081935], [35.231659, 129.081667], [35.231348, 129.082704], [35.231499, 129.082762], [35.23147, 129.082866], [35.231425, 129.08294], [35.231303, 129.082979], [35.231295, 129.083046], [35.23143, 129.083257], [35.23144, 129.083318], [35.231377, 129.083664], [35.231417, 129.083726], [35.23145, 129.084006], [35.231549, 129.083994], [35.231703, 129.083183], [35.231859, 129.083213], [35.231825, 129.083364], [35.231873, 129.083374], [35.232004, 129.083277], [35.232142, 129.083323], [35.232219, 129.083021], [35.232255, 129.082877], [35.232207, 129.082857], [35.232303, 129.082504], [35.232398, 129.082152], [35.232334, 129.082123], [35.232356, 129.082045], [35.232263, 129.082006]];
   const AREA_MIRI = [[35.233362, 129.078631], [35.233322, 129.07851], [35.233205, 129.078736], [35.233141, 129.079137], [35.233156, 129.07915], [35.233168, 129.079218], [35.233209, 129.079408], [35.233422, 129.079694], [35.233388, 129.079945], [35.233179, 129.080671], [35.233173, 129.080708], [35.233165, 129.080759], [35.233065, 129.081446], [35.23294, 129.081999], [35.232952, 129.082044], [35.233019, 129.082064], [35.233048, 129.082044], [35.23319, 129.081487], [35.233244, 129.08109], [35.233292, 129.080793], [35.233302, 129.080759], [35.233533, 129.079927], [35.23365, 129.079499], [35.233687, 129.079314], [35.233654, 129.079292], [35.233585, 129.079271], [35.233552, 129.079356], [35.23354, 129.079481], [35.233449, 129.079532], [35.233307, 129.07937], [35.233289, 129.079255], [35.233258, 129.079188], [35.23325, 129.079144], [35.233238, 129.079128], [35.233256, 129.078936], [35.233362, 129.078631]];
   const AREA_LIB = [[35.234699, 129.07886], [35.234764, 129.078544], [35.234659, 129.078509], [35.234671, 129.078454], [35.234461, 129.078385], [35.234451, 129.078437], [35.234332, 129.0784], [35.234302, 129.078532], [35.234259, 129.07852], [35.234299, 129.07833], [35.234027, 129.078241], [35.233993, 129.078283], [35.233916, 129.078683], [35.233908, 129.078721], [35.234194, 129.07881], [35.234204, 129.07877], [35.234211, 129.078739], [35.234243, 129.078583], [35.234288, 129.078598], [35.234262, 129.078727], [35.234699, 129.07886]];
+  const AREA_SCULPT = [[35.235135, 129.080976], [35.235204, 129.081385], [35.234969, 129.081702], [35.234608, 129.081802], [35.234277, 129.081683], [35.234181, 129.081385], [35.234211, 129.08105], [35.234488, 129.080857], [35.234849, 129.080797], [35.235135, 129.080976]]; // 선생님이 표시한 사진 기준(생물관 옆 정원)
+  const HOME = {name:"우리 유치원", emoji:"🏫", lat:35.236528, lng:129.083338, area:[[35.236717, 129.083219], [35.236717, 129.083496], [35.236551, 129.083496], [35.236558, 129.083283], [35.236525, 129.083283], [35.236518, 129.083499], [35.236374, 129.083502], [35.236377, 129.083413], [35.236355, 129.0834], [35.236345, 129.08338], [35.236339, 129.083368], [35.23634, 129.083344], [35.236343, 129.083325], [35.236351, 129.083311], [35.236366, 129.083299], [35.236376, 129.083296], [35.236368, 129.083174], [35.236449, 129.083174], [35.236453, 129.083193], [35.236611, 129.083188], [35.23661, 129.083221], [35.236717, 129.083219]]}; // 부산대학교 보육종합센터
   const CAMPUS = [[35.237535, 129.079004], [35.237212, 129.079447], [35.236866, 129.080436], [35.236802, 129.080717], [35.236834, 129.080853], [35.236815, 129.081165], [35.236923, 129.081195], [35.236909, 129.082941], [35.2363, 129.082944], [35.235582, 129.082943], [35.235426, 129.082931], [35.234217, 129.082893], [35.233687, 129.08384], [35.233578, 129.083912], [35.23331, 129.084687], [35.232571, 129.084457], [35.232503, 129.084389], [35.23268, 129.083514], [35.232002, 129.08329], [35.231859, 129.083397], [35.231711, 129.084227], [35.230048, 129.083738], [35.230071, 129.083516], [35.230076, 129.083377], [35.230083, 129.083076], [35.230086, 129.082895], [35.229989, 129.082891], [35.229991, 129.082764], [35.229999, 129.082624], [35.230157, 129.082244], [35.230438, 129.082234], [35.230578, 129.081896], [35.23061, 129.081676], [35.230412, 129.081432], [35.229949, 129.081197], [35.23007, 129.080634], [35.230275, 129.080192], [35.230675, 129.079518], [35.230985, 129.078925], [35.231625, 129.078034], [35.231954, 129.077474], [35.23202, 129.077268], [35.232023, 129.07657], [35.232024, 129.076222], [35.231991, 129.075876], [35.231877, 129.075799], [35.231992, 129.075414], [35.231776, 129.075319], [35.231624, 129.075022], [35.232031, 129.074773], [35.232719, 129.074311], [35.23332, 129.074129], [35.233953, 129.074255], [35.234082, 129.074046], [35.234483, 129.073852], [35.235413, 129.073986], [35.235804, 129.07433], [35.235978, 129.07492], [35.235842, 129.075813], [35.235946, 129.07596], [35.236531, 129.075857], [35.236611, 129.076708], [35.237499, 129.076588], [35.237742, 129.076885], [35.238404, 129.076675], [35.238536, 129.077126], [35.238459, 129.07785], [35.237829, 129.078249], [35.237535, 129.079004]];
   const OLD_BOUNDS = {n:35.2385,s:35.2299,w:129.0738,e:129.0847}; // 예전 그림 지도(%) 좌표 변환용
   const OSM_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
@@ -552,7 +556,7 @@
     places: [
       {id:"neok", name:"넉넉한터", emoji:"🌳", lat:35.231846, lng:129.082836, area:AREA_NEOK, votes:6, description:"넓게 열린 공간에서 바람과 몸의 움직임을 살펴봐요."},
       {id:"miri", name:"미리내골", emoji:"💧", lat:35.233314, lng:129.080287, area:AREA_MIRI, votes:4, description:"물길과 나무 사이에서 소리, 온도, 바람을 비교해봐요."},
-      {id:"sculpt", name:"조각공원", emoji:"🌀", lat:35.23335, lng:129.08155, radius:35, approx:true, votes:3, description:"조형물과 주변 자연의 모양을 관찰해요."},
+      {id:"sculpt", name:"조각공원", emoji:"🌀", lat:35.234578, lng:129.081329, area:AREA_SCULPT, votes:3, description:"조형물과 주변 자연의 모양을 관찰해요."},
       {id:"library", name:"중앙도서관", emoji:"📚", lat:35.234336, lng:129.078551, area:AREA_LIB, votes:2, description:"건물 사이에서 바람이 어떻게 달라지는지 찾아봐요."}
     ],
     records: [
@@ -567,7 +571,7 @@
   let teacherUnlocked = false;
   let pendingPhoto = "";
   let map = null, layers = {}, baseLayers = {}, satellite = false;
-  let kidMarker = null, kidLatLng = null, kidAnim = 0;
+  let kidMarker = null, kidLatLng = null, kidAnim = 0, kidHome = false;
   let newMap = null, newMarker = null, newLatLng = null;
   let editMap = null, editLayer = null;
   let voteLock = false;
@@ -586,7 +590,9 @@
   function migrate(data){
     data.places.forEach(p=>{
       // 예전 임시 위치(예술관 주변)에 남아 있는 조각공원은 미리내골 옆으로 옮김
-      if(p.id==="sculpt" && p.lat===35.2328 && p.lng===129.0765){ const d=demo.places.find(x=>x.id==="sculpt"); p.lat=d.lat; p.lng=d.lng; }
+      if(p.id==="sculpt" && ((p.lat===35.2328 && p.lng===129.0765) || (p.lat===35.23335 && p.lng===129.08155))){
+        const d=demo.places.find(x=>x.id==="sculpt"); Object.assign(p,{lat:d.lat,lng:d.lng,area:d.area,approx:false}); delete p.radius;
+      }
       if(typeof p.lat==="number" && typeof p.lng==="number") return;
       const d=demo.places.find(x=>x.id===p.id);
       if(d){ Object.assign(p,{lat:d.lat,lng:d.lng,area:d.area,radius:d.radius,approx:d.approx}); }
@@ -636,7 +642,7 @@
       const p=placeById(btn.dataset.vote); if(!p) return;
       voteLock=true; setTimeout(()=>voteLock=false,700);
       const rect=btn.getBoundingClientRect(); burst(rect.right-40, rect.top+rect.height/2);
-      p.votes=(Number(p.votes)||0)+1; selectedPlaceId=p.id; save();
+      p.votes=(Number(p.votes)||0)+1; selectedPlaceId=p.id; kidHome=false; save();
       toast(`${p.name}에 한 표! 🌟`);
     });
   }
@@ -653,18 +659,22 @@
     baseLayers.map=L.tileLayer(OSM_URL,{maxZoom:19,attribution:OSM_ATTR}).addTo(map);
     baseLayers.sat=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:19,attribution:"위성 사진 © Esri"});
     L.polygon(CAMPUS,{color:"#2f7d57",weight:3,dashArray:"8 8",fill:false,interactive:false}).addTo(map);
+    L.polygon(HOME.area,{color:"#3b82c4",weight:3,fillColor:"#87c9df",fillOpacity:.35,interactive:false}).addTo(map);
+    L.marker([HOME.lat,HOME.lng],{zIndexOffset:300,icon:divIcon(`<div class="map-pin home" role="button" aria-label="${HOME.name}">
+      <div class="pin-bubble"><span>${HOME.emoji}</span></div><div class="pin-label">${HOME.name}</div></div>`)})
+      .on("click",()=>{ kidHome=true; moveKid(); toast("유치원으로 돌아가요! 🏫"); }).addTo(map);
     layers.areas=L.layerGroup().addTo(map); layers.pins=L.layerGroup().addTo(map);
     layers.wind=L.layerGroup(); layers.weather=L.layerGroup();
     fitPlaces();
   }
   function fitPlaces(){
     if(!map) return;
-    const pts=state.places.map(p=>[p.lat,p.lng]);
+    const pts=[...state.places.map(p=>[p.lat,p.lng]),[HOME.lat,HOME.lng]];
     const b=pts.length?L.latLngBounds(pts):L.latLngBounds(CAMPUS);
     map.fitBounds(b,{paddingTopLeft:[70,120],paddingBottomRight:[70,110],maxZoom:18});
   }
   function selectPlace(id){
-    selectedPlaceId=id; renderMap(); renderSelected();
+    selectedPlaceId=id; kidHome=false; renderMap(); renderSelected();
   }
   function renderMap(){
     if(!map) return;
@@ -693,11 +703,10 @@
   function moveKid(){
     if(!map) return;
     const p=placeById(selectedPlaceId);
-    if(!p){ if(kidMarker){ kidMarker.remove(); kidMarker=null; kidLatLng=null; } return; }
-    const target=L.latLng(p.lat,p.lng);
-    if(!kidMarker){
-      kidMarker=L.marker(target,{icon:divIcon(KID_HTML),interactive:false,keyboard:false,zIndexOffset:1000}).addTo(map);
-      kidLatLng=target; return;
+    const target=(kidHome||!p)?L.latLng(HOME.lat,HOME.lng):L.latLng(p.lat,p.lng);
+    if(!kidMarker){ // 처음에는 유치원에서 출발
+      kidLatLng=L.latLng(HOME.lat,HOME.lng);
+      kidMarker=L.marker(kidLatLng,{icon:divIcon(KID_HTML),interactive:false,keyboard:false,zIndexOffset:1000}).addTo(map);
     }
     if(kidLatLng.equals(target)) return;
     const el=kidMarker.getElement().querySelector(".kid-avatar"), bubble=el.querySelector(".kid-bubble");
