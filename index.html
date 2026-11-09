@@ -106,7 +106,6 @@
   .pin-label{display:inline-block;margin-top:9px;background:rgba(255,255,255,.94);border-radius:999px;padding:6px 9px;font-size:11px;font-weight:900;box-shadow:0 4px 10px rgba(37,52,45,.14);white-space:nowrap}
   .map-pin:hover .pin-bubble,.map-pin.selected .pin-bubble{border-color:#e9a11a;scale:1.08}
   .wind-marker{position:absolute;transform:translate(-50%,-50%);z-index:6;pointer-events:none}
-  .wind-arrow{display:block;font-size:30px;filter:drop-shadow(0 4px 4px rgba(0,0,0,.16));transform-origin:center}
   .wind-tag{font-size:10px;background:#fff;padding:3px 7px;border-radius:10px;font-weight:900;white-space:nowrap;box-shadow:0 3px 8px rgba(0,0,0,.1)}
   .weather-marker{position:absolute;transform:translate(-50%,-50%);z-index:7;pointer-events:none;display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.95);padding:4px 8px 4px 5px;border-radius:999px;box-shadow:0 4px 10px rgba(0,0,0,.14);white-space:nowrap}
   .weather-marker .w-icon{font-size:20px;line-height:1}
@@ -385,15 +384,6 @@
                 <textarea id="discovery" placeholder="예: 같은 장소에서도 위치에 따라 바람 세기가 달랐음. 다음 산책에서 비교해 보기로 함."></textarea>
               </div>
               <div class="field">
-                <label for="windDirection">바람 방향</label>
-                <select id="windDirection">
-                  <option value="N">북쪽 ↑</option><option value="NE">북동쪽 ↗</option>
-                  <option value="E">동쪽 →</option><option value="SE">남동쪽 ↘</option>
-                  <option value="S">남쪽 ↓</option><option value="SW">남서쪽 ↙</option>
-                  <option value="W">서쪽 ←</option><option value="NW">북서쪽 ↖</option>
-                </select>
-              </div>
-              <div class="field">
                 <label for="windStrength">바람 세기</label>
                 <select id="windStrength">
                   <option value="1">약함 · 살짝 느껴요</option>
@@ -415,7 +405,7 @@
                 <label for="temperature">기온 (°C)</label>
                 <input id="temperature" type="number" step="0.5" min="-30" max="45" placeholder="예: 14">
               </div>
-              <div class="field full">
+              <div class="field">
                 <label for="feeling">아이들이 느낀 온도</label>
                 <select id="feeling">
                   <option value="">선택 안 함</option>
@@ -495,7 +485,6 @@
   const $ = (s, r=document) => r.querySelector(s);
   const $$ = (s, r=document) => [...r.querySelectorAll(s)];
   const esc = (v="") => String(v).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]));
-  const dirDeg = {N:0,NE:45,E:90,SE:135,S:180,SW:225,W:270,NW:315};
   const WEATHER = {sunny:{icon:"☀️",label:"맑음"},partly:{icon:"⛅",label:"구름 조금"},cloudy:{icon:"☁️",label:"흐림"},rain:{icon:"🌧️",label:"비"},snow:{icon:"❄️",label:"눈"}};
   const FEELING = {cold:"🥶 추워요",cool:"😊 시원해요",warm:"🙂 따뜻해요",hot:"🥵 더워요"};
   const hasTemp = r => r && r.temperature!==null && r.temperature!==undefined && r.temperature!=="" && !isNaN(Number(r.temperature));
@@ -521,7 +510,7 @@
     const ws=Math.max(1,Math.min(3,Number(r.windStrength)||1));
     if(w) tiles.push(`<div class="kid-tile"><span class="k-icon">${w.icon}</span><span class="k-label">${KID_WEATHER[r.weather]}</span></div>`);
     if(hasTemp(r)) tiles.push(`<div class="kid-tile"><span class="k-icon">${f?f[0]:"🌡️"}</span><span class="k-label">${Number(r.temperature)}도</span><span class="k-sub">${f?f[1]:""}</span></div>`);
-    if(r.windStrength) tiles.push(`<div class="kid-tile"><span class="k-icon"><span style="display:inline-block;transform:rotate(${dirDeg[r.windDirection]||0}deg)">➤</span></span><span class="k-label">바람 ${KID_WIND[ws]}</span><span class="k-sub">${"💨".repeat(ws)}</span></div>`);
+    if(r.windStrength) tiles.push(`<div class="kid-tile"><span class="k-icon">🍃</span><span class="k-label">바람 ${KID_WIND[ws]}</span><span class="k-sub">${"💨".repeat(ws)}</span></div>`);
     return tiles.length?`<div class="kid-weather">${tiles.join("")}</div>`:"";
   }
   function burst(x,y){
@@ -560,9 +549,9 @@
       {id:"library", name:"중앙도서관", emoji:"📚", lat:35.234336, lng:129.078551, area:AREA_LIB, votes:2, description:"건물 사이에서 바람이 어떻게 달라지는지 찾아봐요."}
     ],
     records: [
-      {id:"r1", placeId:"neok", date:"2026-11-08", mark:"⭐", photo:"", quote:"여기서는 나뭇잎이 계속 춤추는 것 같아요!", discovery:"열린 공간이라 다른 곳보다 바람을 더 잘 느낄 수 있다는 의견이 나왔어요.", windDirection:"NE", windStrength:3, weather:"partly", temperature:13, feeling:"cool"},
-      {id:"r2", placeId:"miri", date:"2026-11-06", mark:"💧", photo:"", quote:"물 옆은 조금 더 시원해요.", discovery:"아이들이 물 가까이와 길 안쪽의 느낌을 비교하기 시작했어요.", windDirection:"E", windStrength:1, weather:"sunny", temperature:16, feeling:"cool"},
-      {id:"r3", placeId:"sculpt", date:"2026-11-02", mark:"🌀", photo:"", quote:"동그란 조각 옆에서 바람이 빙글 도는 것 같아요.", discovery:"보이는 형태를 바람의 움직임과 연결해 표현했어요.", windDirection:"NW", windStrength:2, weather:"rain", temperature:11, feeling:"cold"}
+      {id:"r1", placeId:"neok", date:"2026-11-08", mark:"⭐", photo:"", quote:"여기서는 나뭇잎이 계속 춤추는 것 같아요!", discovery:"열린 공간이라 다른 곳보다 바람을 더 잘 느낄 수 있다는 의견이 나왔어요.", windStrength:3, weather:"partly", temperature:13, feeling:"cool"},
+      {id:"r2", placeId:"miri", date:"2026-11-06", mark:"💧", photo:"", quote:"물 옆은 조금 더 시원해요.", discovery:"아이들이 물 가까이와 길 안쪽의 느낌을 비교하기 시작했어요.", windStrength:1, weather:"sunny", temperature:16, feeling:"cool"},
+      {id:"r3", placeId:"sculpt", date:"2026-11-02", mark:"🌀", photo:"", quote:"동그란 조각 옆에서 바람이 빙글 도는 것 같아요.", discovery:"보이는 형태를 바람의 움직임과 연결해 표현했어요.", windStrength:2, weather:"rain", temperature:11, feeling:"cold"}
     ]
   };
 
@@ -690,7 +679,6 @@
       const r=latestFor(p.id); if(!r) return;
       const strength=Math.max(1,Math.min(3,Number(r.windStrength)||1));
       layers.wind.addLayer(L.marker([p.lat,p.lng],{interactive:false,keyboard:false,icon:divIcon(`<div class="wind-marker" style="left:64px;top:-74px">
-        <span class="wind-arrow" style="transform:rotate(${dirDeg[r.windDirection]||0}deg);font-size:${24+strength*7}px">➤</span>
         <div class="wind-tag">${"💨".repeat(strength)}</div></div>`)}));
       const w=WEATHER[r.weather];
       if(w||hasTemp(r)) layers.weather.addLayer(L.marker([p.lat,p.lng],{interactive:false,keyboard:false,icon:divIcon(`<div class="weather-marker" style="left:-70px;top:-66px">
@@ -860,7 +848,8 @@
     $("#modalTitle").textContent=`${p.emoji||"📍"} ${p.name} · ${r.date}`;
     $("#modalBody").innerHTML=`
       <div class="place-cover">${r.photo?`<img src="${r.photo}" alt="${esc(p.name)} 사진">`:`<div class="cover-emoji">${esc(r.mark||p.emoji||"🌿")}</div>`}</div>
-      <div class="place-meta"><span class="chip">${esc(r.mark||"🌿")} 아이 마크</span><span class="chip">바람 ${"💨".repeat(Number(r.windStrength)||1)}</span><span class="chip">방향 ${esc(r.windDirection||"-")}</span>${weatherChips(r)}</div>
+      <div class="place-meta"><span class="chip">${esc(r.mark||"🌿")} 아이 마크</span><span class="chip">바람 ${"💨".repeat(Number(r.windStrength)||1)}</span>${weatherChips(r)}</div>
+      ${kidWeather(r)}
       ${r.quote?`<div class="quote">“${esc(r.quote)}”</div>`:""}
       <div class="discover" style="margin-top:14px"><b>오늘의 발견 / 교사 메모</b><br>${esc(r.discovery||"기록 없음")}</div>
     `;
@@ -953,7 +942,6 @@
       photo:pendingPhoto,
       quote:$("#childQuote").value.trim(),
       discovery:$("#discovery").value.trim(),
-      windDirection:$("#windDirection").value,
       windStrength:Number($("#windStrength").value),
       weather:$("#weather").value,
       temperature:$("#temperature").value===""?null:Number($("#temperature").value),
