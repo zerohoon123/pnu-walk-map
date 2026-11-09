@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#f6f3e8">
 <title>사랑반 산책 지도 | 유아 산책 기록 지도</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" onerror="this.onerror=null;this.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'">
 <style>
   :root{
     --paper:#f7f4e9;
@@ -478,6 +478,8 @@
 <div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>window.L||document.write('<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>')</script>
+<script>window.L||document.write('<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"><\/script>')</script>
 <script>
 (() => {
   const STORAGE_KEY = "pnu-kindergarten-walk-map-v1";
@@ -538,6 +540,20 @@
   const CAMPUS = [[35.237535, 129.079004], [35.237212, 129.079447], [35.236866, 129.080436], [35.236802, 129.080717], [35.236834, 129.080853], [35.236815, 129.081165], [35.236923, 129.081195], [35.236909, 129.082941], [35.2363, 129.082944], [35.235582, 129.082943], [35.235426, 129.082931], [35.234217, 129.082893], [35.233687, 129.08384], [35.233578, 129.083912], [35.23331, 129.084687], [35.232571, 129.084457], [35.232503, 129.084389], [35.23268, 129.083514], [35.232002, 129.08329], [35.231859, 129.083397], [35.231711, 129.084227], [35.230048, 129.083738], [35.230071, 129.083516], [35.230076, 129.083377], [35.230083, 129.083076], [35.230086, 129.082895], [35.229989, 129.082891], [35.229991, 129.082764], [35.229999, 129.082624], [35.230157, 129.082244], [35.230438, 129.082234], [35.230578, 129.081896], [35.23061, 129.081676], [35.230412, 129.081432], [35.229949, 129.081197], [35.23007, 129.080634], [35.230275, 129.080192], [35.230675, 129.079518], [35.230985, 129.078925], [35.231625, 129.078034], [35.231954, 129.077474], [35.23202, 129.077268], [35.232023, 129.07657], [35.232024, 129.076222], [35.231991, 129.075876], [35.231877, 129.075799], [35.231992, 129.075414], [35.231776, 129.075319], [35.231624, 129.075022], [35.232031, 129.074773], [35.232719, 129.074311], [35.23332, 129.074129], [35.233953, 129.074255], [35.234082, 129.074046], [35.234483, 129.073852], [35.235413, 129.073986], [35.235804, 129.07433], [35.235978, 129.07492], [35.235842, 129.075813], [35.235946, 129.07596], [35.236531, 129.075857], [35.236611, 129.076708], [35.237499, 129.076588], [35.237742, 129.076885], [35.238404, 129.076675], [35.238536, 129.077126], [35.238459, 129.07785], [35.237829, 129.078249], [35.237535, 129.079004]];
   const OLD_BOUNDS = {n:35.2385,s:35.2299,w:129.0738,e:129.0847}; // 예전 그림 지도(%) 좌표 변환용
   const OSM_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+  const FALLBACK_URL = "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png";
+  const FALLBACK_ATTR = '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> 기여자 © <a href="https://carto.com/attributions">CARTO</a>';
+  function baseTiles(m){
+    const t=L.tileLayer(OSM_URL,{maxZoom:19,attribution:OSM_ATTR});
+    let errors=0, loaded=0;
+    t.on("tileload",()=>loaded++);
+    t.on("tileerror",()=>{
+      if(++errors<3 || loaded>errors || t._fallback) return;
+      t._fallback=true;
+      if(m.attributionControl) m.attributionControl.removeAttribution(OSM_ATTR).addAttribution(FALLBACK_ATTR);
+      t.options.attribution=FALLBACK_ATTR; t.options.subdomains="abcd"; t.setUrl(FALLBACK_URL);
+    });
+    return t;
+  }
   const OSM_ATTR = '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> 기여자';
   const KID_HTML = `<div class="kid-avatar" aria-hidden="true"><div class="kid-bubble">도착! ✨</div><div class="kid-body"><svg viewBox="0 0 60 84" width="48" height="67">                 <ellipse cx="30" cy="80" rx="16" ry="4" fill="#2e3b30" opacity=".22"/>                 <rect class="leg-l" x="21" y="56" width="8" height="20" rx="4" fill="#3b4a6b"/>                 <rect class="leg-r" x="31" y="56" width="8" height="20" rx="4" fill="#3b4a6b"/>                 <ellipse cx="25" cy="77" rx="6" ry="3.5" fill="#e0533d"/><ellipse cx="35" cy="77" rx="6" ry="3.5" fill="#e0533d"/>                 <rect class="arm-l" x="9" y="38" width="8" height="18" rx="4" fill="#ffd9b8"/>                 <rect class="arm-r" x="43" y="38" width="8" height="18" rx="4" fill="#ffd9b8"/>                 <path d="M15 40 Q30 30 45 40 L48 62 Q30 66 12 62Z" fill="#ffcf3f" stroke="#e5b22a" stroke-width="1.5"/>                 <path d="M30 47 c-2.5 -3.5 -7.5 -1.5 -5.5 2 l5.5 5.5 l5.5 -5.5 c2 -3.5 -3 -5.5 -5.5 -2z" fill="#e85a6b"/>                 <circle cx="30" cy="24" r="14" fill="#ffdcbf"/>                 <path d="M16.5 23 Q17 9 30 9 Q43 9 43.5 23 Q38 16 30 17 Q22 16 16.5 23Z" fill="#4a3226"/>                 <path d="M13 17 Q30 -2 47 17 Z" fill="#ffcf3f" stroke="#e5b22a" stroke-width="1.5"/>                 <ellipse cx="30" cy="17" rx="20" ry="3.2" fill="#ffd95c" stroke="#e5b22a" stroke-width="1.2"/>                 <circle cx="25" cy="25" r="1.9" fill="#2b2b2b"/><circle cx="35" cy="25" r="1.9" fill="#2b2b2b"/>                 <circle cx="21.5" cy="29.5" r="2.6" fill="#ff9ea3" opacity=".7"/><circle cx="38.5" cy="29.5" r="2.6" fill="#ff9ea3" opacity=".7"/>                 <path d="M26.5 30.5 Q30 33.5 33.5 30.5" fill="none" stroke="#a5523e" stroke-width="1.6" stroke-linecap="round"/>               </svg></div></div>`;
 
@@ -566,10 +582,19 @@
   let voteLock = false;
   let kidTimer = null;
 
+  let storageOk = true;
+  function storeGet(){ try{ return localStorage.getItem(STORAGE_KEY); }catch(e){ storageOk=false; return null; } }
+  function storeSet(v){
+    try{ localStorage.setItem(STORAGE_KEY,v); }
+    catch(e){
+      if(e && (e.name==="QuotaExceededError" || String(e).includes("Quota"))) throw e;
+      if(storageOk){ storageOk=false; setTimeout(()=>toast("이 브라우저에서는 기록이 임시로만 저장돼요. JSON 내보내기로 보관해 주세요."),0); }
+    }
+  }
   function cloneDemo(){ return JSON.parse(JSON.stringify(demo)); }
   function load(){
     try{
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = storeGet();
       if(!raw) return cloneDemo();
       const parsed = JSON.parse(raw);
       if(!Array.isArray(parsed.places) || !Array.isArray(parsed.records)) return cloneDemo();
@@ -577,12 +602,16 @@
     }catch(e){ return cloneDemo(); }
   }
   function migrate(data){
+    data.places=data.places.filter(p=>p && typeof p==="object" && p.id!=null);
+    data.places.forEach(p=>{ p.id=String(p.id); if(typeof p.name!=="string") p.name=String(p.name??"장소"); });
+    data.records=data.records.filter(r=>r && typeof r==="object" && r.id!=null && r.placeId!=null);
+    data.records.forEach(r=>{ r.id=String(r.id); r.placeId=String(r.placeId); if(typeof r.date!=="string") r.date=r.date?String(r.date):""; });
     data.places.forEach(p=>{
       // 예전 임시 위치(예술관 주변)에 남아 있는 조각공원은 미리내골 옆으로 옮김
       if(p.id==="sculpt" && ((p.lat===35.2328 && p.lng===129.0765) || (p.lat===35.23335 && p.lng===129.08155))){
         const d=demo.places.find(x=>x.id==="sculpt"); Object.assign(p,{lat:d.lat,lng:d.lng,area:d.area,approx:false}); delete p.radius;
       }
-      if(typeof p.lat==="number" && typeof p.lng==="number") return;
+      if(typeof p.lat==="number" && typeof p.lng==="number" && isFinite(p.lat) && isFinite(p.lng)) return;
       const d=demo.places.find(x=>x.id===p.id);
       if(d){ Object.assign(p,{lat:d.lat,lng:d.lng,area:d.area,radius:d.radius,approx:d.approx}); }
       else{
@@ -596,7 +625,7 @@
     return data;
   }
   function save(){
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    storeSet(JSON.stringify(state));
     renderAll();
   }
   function toast(msg){
@@ -645,7 +674,7 @@
   function initMap(){
     if(!window.L){ $("#mapOffline").hidden=false; return; }
     map=L.map("leafletMap",{scrollWheelZoom:false,minZoom:15,maxZoom:19,maxBounds:L.latLngBounds(CAMPUS).pad(.8)});
-    baseLayers.map=L.tileLayer(OSM_URL,{maxZoom:19,attribution:OSM_ATTR}).addTo(map);
+    baseLayers.map=baseTiles(map).addTo(map);
     baseLayers.sat=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:19,attribution:"위성 사진 © Esri"});
     L.polygon(CAMPUS,{color:"#2f7d57",weight:3,dashArray:"8 8",fill:false,interactive:false}).addTo(map);
     L.polygon(HOME.area,{color:"#3b82c4",weight:3,fillColor:"#87c9df",fillOpacity:.35,interactive:false}).addTo(map);
@@ -719,7 +748,7 @@
   }
   function miniMap(el){
     const m=L.map(el,{scrollWheelZoom:false,minZoom:15,maxZoom:19});
-    L.tileLayer(OSM_URL,{maxZoom:19,attribution:OSM_ATTR}).addTo(m);
+    baseTiles(m).addTo(m);
     L.polygon(CAMPUS,{color:"#2f7d57",weight:2,dashArray:"6 6",fill:false,interactive:false}).addTo(m);
     m.fitBounds(L.latLngBounds(CAMPUS));
     return m;
